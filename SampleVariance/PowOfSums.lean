@@ -11,8 +11,9 @@ open Finset BigOperators
 
 theorem pow_sum_castSucc_eq_sum_add_pow
   {R : Type u_1} [CommSemiring R]
-  {n k : ℕ}
+  {n : ℕ}
   {f : Fin (n.succ) → ℝ}
+  {k : ℕ}
   : (∑ i : Fin n.succ, f i) ^ k
     = ∑ j : Fin k.succ, (∑ i : Fin n, f i.castSucc) ^ j.toNat
     * (f (Fin.last n)) ^ (k - j) * k.choose j

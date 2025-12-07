@@ -50,4 +50,10 @@ theorem k_moment_sum_recursive
     = ∑ i : Fin k, k.choose i
     * moment (X (Fin.last n)) (k - i) P
     * ∑ j : Fin n, moment (isum_rv (ifun_first_n X j.castSucc)) i P
-  := by sorry
+  := by
+  unfold isum_rv
+  simp only [Nat.succ_eq_add_one, Fin.toNat_eq_val, Fin.coe_castSucc]
+  unfold moment
+  simp only [Pi.pow_apply]
+  rw [pow_sum_castSucc_eq_sum_add_pow]
+  sorry
