@@ -29,8 +29,7 @@ example
   (hXIntegrable : (i : Fin n) → Integrable (X i) P)
   : (moment (isum_rv X) 1 P = ∑ i : Fin n, moment (X i) 1 P)
   := by
-  unfold isum_rv
-  unfold moment
+  unfold isum_rv moment
   simp only [pow_one, Pi.pow_apply]
   rw [integral_finset_sum]
   intro i _
@@ -53,30 +52,28 @@ theorem k_moment_sum_recursive
   := calc
     moment (isum_rv X) k P
       = P[(isum_rv X) ^ k]
-      := by unfold isum_rv; rfl
-    _ = P[(∑ ki : Fin k.succ, isum_rv (ifun_first_n X (Fin.last n)) + X (Fin.last n)) ^ k]
+      := by rfl
+    _ = P[((n |> Fin.last |> ifun_first_n X |> isum_rv) + (n |> Fin.last |> X)) ^ k]
       := by
-      unfold ifun_first_n
-      unfold isum_rv
-      simp
+      unfold ifun_first_n isum_rv
+      simp only [Nat.succ_eq_add_one, Pi.pow_apply, Fin.toNat_eq_val, Fin.val_last, Pi.add_apply]
       rewrite [<- MeasureTheory.setIntegral_univ]
       nth_rewrite 2 [<- MeasureTheory.setIntegral_univ]
       apply setIntegral_congr_fun
       · exact MeasurableSet.univ
-      rw [Set.eqOn_univ]
-      rw [funext_iff]
+      rw [Set.eqOn_univ, funext_iff]
       intro ω
-      rw [Fin.sum_univ_castSucc]
-      -- simp
-      -- linarith
-      sorry
+      rw [Fin.sum_univ_castSucc, pow_eq_pow_iff_cases]
+      right
+      left
+      rw [add_left_inj]
+      rfl
     _ = P[∑ ki : Fin k.succ, (isum_rv (ifun_first_n X (Fin.last n))) ^ ki.toNat
       * (X (Fin.last n)) ^ (k - ki) * k.choose ki]
       := by
       unfold ifun_first_n
       rw [Fin.sum_univ_castSucc]
       simp
-
       -- rw?
       sorry
     -- _ = ∫ (x : Ω), (∑ i, X i x) ^ k ∂P
