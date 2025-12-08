@@ -50,10 +50,46 @@ theorem k_moment_sum_recursive
     = ∑ i : Fin k, k.choose i
     * moment (X (Fin.last n)) (k - i) P
     * ∑ j : Fin n, moment (isum_rv (ifun_first_n X j.castSucc)) i P
-  := by
-  unfold isum_rv
-  simp only [Nat.succ_eq_add_one, Fin.toNat_eq_val, Fin.coe_castSucc]
-  unfold moment
-  simp only [Pi.pow_apply]
-  rw [pow_sum_castSucc_eq_sum_add_pow]
-  sorry
+  := calc
+    moment (isum_rv X) k P
+      = P[(isum_rv X) ^ k]
+      := by unfold isum_rv; rfl
+    _ = P[(∑ ki : Fin k.succ, isum_rv (ifun_first_n X (Fin.last n)) + X (Fin.last n)) ^ k]
+      := by
+      unfold ifun_first_n
+      unfold isum_rv
+      simp
+      rewrite [<- MeasureTheory.setIntegral_univ]
+      nth_rewrite 2 [<- MeasureTheory.setIntegral_univ]
+      apply setIntegral_congr_fun
+      · exact MeasurableSet.univ
+      rw [Set.eqOn_univ]
+      rw [funext_iff]
+      intro ω
+      rw [Fin.sum_univ_castSucc]
+      -- simp
+      -- linarith
+      sorry
+    _ = P[∑ ki : Fin k.succ, (isum_rv (ifun_first_n X (Fin.last n))) ^ ki.toNat
+      * (X (Fin.last n)) ^ (k - ki) * k.choose ki]
+      := by
+      unfold ifun_first_n
+      rw [Fin.sum_univ_castSucc]
+      simp
+
+      -- rw?
+      sorry
+    -- _ = ∫ (x : Ω), (∑ i, X i x) ^ k ∂P
+    _ = ∑ i : Fin k, k.choose i
+      * moment (X (Fin.last n)) (k - i) P
+      * ∑ j : Fin n, moment (isum_rv (ifun_first_n X j.castSucc)) i P
+      := sorry
+  -- := by
+  -- unfold isum_rv
+  -- simp only [Nat.succ_eq_add_one, Fin.toNat_eq_val, Fin.coe_castSucc]
+  -- unfold moment
+  -- simp [Pi.pow_apply]
+  -- have h1 : ∫ (x : Ω), (∑ i, X i x) ^ k ∂P = ∫ (x : Ω), (∑ i, (fun j => X j x) i) ^ k ∂P := rfl
+  -- rewrite [h1]
+  -- -- rewrite [pow_sum_castSucc_eq_sum_add_pow]
+  -- sorry
