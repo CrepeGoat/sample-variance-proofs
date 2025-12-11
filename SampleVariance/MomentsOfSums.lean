@@ -22,12 +22,12 @@ noncomputable def isum_rv
 
 example
   {Ω : Type u_1} [m : MeasurableSpace Ω]
-  {P : Measure Ω} [IsProbabilityMeasure P]
+  {μ : Measure Ω} [IsProbabilityMeasure μ]
   {n : ℕ}
   {X : Fin n → Ω → ℝ}
   -- (hX : (i : Fin n) → Measurable (X i))
-  (hXIntegrable : (i : Fin n) → Integrable (X i) P)
-  : (moment (isum_rv X) 1 P = ∑ i : Fin n, moment (X i) 1 P)
+  (hXIntegrable : (i : Fin n) → Integrable (X i) μ)
+  : (moment (isum_rv X) 1 μ = ∑ i : Fin n, moment (X i) 1 μ)
   := by
   unfold isum_rv moment
   simp only [pow_one, Pi.pow_apply]
@@ -40,24 +40,25 @@ example
 
 theorem k_moment_sum_recursive
   {Ω : Type u_1} [m : MeasurableSpace Ω]
-  {P : Measure Ω} [IsProbabilityMeasure P]
+  {μ : Measure Ω} [IsProbabilityMeasure μ]
   {n : ℕ}
   (X : Fin n.succ → Ω → ℝ)
   (k : ℕ)
-  -- (hXIdent : (i : Fin n.succ) → (j : Fin n.succ) → IdentDistrib (X i) (X j) P P)
-  : moment (isum_rv X) k P
-    = ∑ i : Fin k, k.choose i
-    * moment (X (Fin.last n)) (k - i) P
-    * ∑ j : Fin n, moment (isum_rv (ifun_first_n X j.castSucc)) i P
+  (hXIndep : iIndepFun X μ)
+  -- (hXIdent : (i : Fin n.succ) → (j : Fin n.succ) → IdentDistrib (X i) (X j) μ μ)
+  : moment (isum_rv X) k μ
+    = ∑ ki : Fin k.succ, μ[(n |> Fin.last |> ifun_first_n X |> isum_rv) ^ ki.toNat]
+      * μ[(n |> Fin.last |> X) ^ (k - ki)] * (k.choose ki).cast
   := calc
-    moment (isum_rv X) k P
-      = P[(isum_rv X) ^ k]
+    moment (isum_rv X) k μ
+      = μ[(isum_rv X) ^ k]
       := by rfl
-    _ = P[∑ ki : Fin k.succ, (n |> Fin.last |> ifun_first_n X |> isum_rv) ^ ki.toNat
+    _ = μ[∑ ki : Fin k.succ, (n |> Fin.last |> ifun_first_n X |> isum_rv) ^ ki.toNat
       * (n |> Fin.last |> X) ^ (k - ki) * k.choose ki]
       := by
       unfold ifun_first_n isum_rv
-      simp
+      simp only [Nat.succ_eq_add_one, Pi.pow_apply, Fin.toNat_eq_val, Fin.val_last,
+        Finset.sum_apply, Pi.mul_apply, Pi.natCast_apply]
       rewrite [<- MeasureTheory.setIntegral_univ]
       nth_rewrite 2 [<- MeasureTheory.setIntegral_univ]
       apply setIntegral_congr_fun
@@ -66,17 +67,10 @@ theorem k_moment_sum_recursive
       intro ω
       rw [pow_sum_castSucc_eq_sum_add_pow]
       rfl
-    _ = ∑ i : Fin k, k.choose i
-      * moment (X (Fin.last n)) (k - i) P
-      * ∑ j : Fin n, moment (isum_rv (ifun_first_n X j.castSucc)) i P
+    _ = ∑ ki : Fin k.succ, μ[(n |> Fin.last |> ifun_first_n X |> isum_rv) ^ ki.toNat]
+      * μ[(n |> Fin.last |> X) ^ (k - ki)] * (k.choose ki).cast
       := by
+      simp only [Nat.succ_eq_add_one, Fin.toNat_eq_val, Fin.val_last, Finset.sum_apply,
+        Pi.mul_apply, Pi.pow_apply, Pi.natCast_apply]
+      rw [hXIndep]
       sorry
-  -- := by
-  -- unfold isum_rv
-  -- simp only [Nat.succ_eq_add_one, Fin.toNat_eq_val, Fin.coe_castSucc]
-  -- unfold moment
-  -- simp [Pi.pow_apply]
-  -- have h1 : ∫ (x : Ω), (∑ i, X i x) ^ k ∂P = ∫ (x : Ω), (∑ i, (fun j => X j x) i) ^ k ∂P := rfl
-  -- rewrite [h1]
-  -- -- rewrite [pow_sum_castSucc_eq_sum_add_pow]
-  -- sorry
