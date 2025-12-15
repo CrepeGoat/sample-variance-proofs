@@ -38,39 +38,60 @@ example
 -- https://leanprover-community.github.io/mathlib4_docs/Mathlib/Probability/Independence/Integration.html#ProbabilityTheory.IndepFun.integral_mul_eq_mul_integral
 
 
+theorem k_moment_sum_expand
+  {Ω : Type u_1} [m : MeasurableSpace Ω]
+  {μ : Measure Ω} [IsProbabilityMeasure μ]
+  {n : ℕ}
+  (X : Fin n.succ → Ω → ℝ)
+  (k : ℕ)
+  : moment (isum_rv X) k μ
+   = μ[∑ ki : Fin k.succ, (X |> ifun_drop_last |> isum_rv) ^ ki.toNat
+    * (n |> Fin.last |> X) ^ (k - ki) * k.choose ki]
+  := by
+    unfold moment ifun_drop_last isum_rv
+    simp only [Nat.succ_eq_add_one, Pi.pow_apply, Fin.toNat_eq_val,
+      Finset.sum_apply, Pi.mul_apply, Pi.natCast_apply]
+    rewrite [<- MeasureTheory.setIntegral_univ]
+    nth_rewrite 2 [<- MeasureTheory.setIntegral_univ]
+    apply setIntegral_congr_fun
+    · exact MeasurableSet.univ
+    rw [Set.eqOn_univ, funext_iff]
+    intro ω
+    rw [pow_sum_castSucc_eq_sum_add_pow]
+    rfl
+
 theorem k_moment_sum_recursive
   {Ω : Type u_1} [m : MeasurableSpace Ω]
   {μ : Measure Ω} [IsProbabilityMeasure μ]
   {n : ℕ}
   (X : Fin n.succ → Ω → ℝ)
   (k : ℕ)
+  (hXIntegrable : (i : Fin n.succ) → Integrable (X i) μ)
   (hXIndep : iIndepFun X μ)
   -- (hXIdent : (i : Fin n.succ) → (j : Fin n.succ) → IdentDistrib (X i) (X j) μ μ)
   : moment (isum_rv X) k μ
-    = ∑ ki : Fin k.succ, μ[(n |> Fin.last |> ifun_first_n X |> isum_rv) ^ ki.toNat]
+    = ∑ ki : Fin k.succ, μ[(X |> ifun_drop_last |> isum_rv) ^ ki.toNat]
       * μ[(n |> Fin.last |> X) ^ (k - ki)] * (k.choose ki).cast
-  := calc
-    moment (isum_rv X) k μ
-      = μ[(isum_rv X) ^ k]
-      := by rfl
-    _ = μ[∑ ki : Fin k.succ, (n |> Fin.last |> ifun_first_n X |> isum_rv) ^ ki.toNat
-      * (n |> Fin.last |> X) ^ (k - ki) * k.choose ki]
-      := by
-      unfold ifun_first_n isum_rv
-      simp only [Nat.succ_eq_add_one, Pi.pow_apply, Fin.toNat_eq_val, Fin.val_last,
-        Finset.sum_apply, Pi.mul_apply, Pi.natCast_apply]
-      rewrite [<- MeasureTheory.setIntegral_univ]
-      nth_rewrite 2 [<- MeasureTheory.setIntegral_univ]
-      apply setIntegral_congr_fun
-      · exact MeasurableSet.univ
-      rw [Set.eqOn_univ, funext_iff]
-      intro ω
-      rw [pow_sum_castSucc_eq_sum_add_pow]
-      rfl
-    _ = ∑ ki : Fin k.succ, μ[(n |> Fin.last |> ifun_first_n X |> isum_rv) ^ ki.toNat]
-      * μ[(n |> Fin.last |> X) ^ (k - ki)] * (k.choose ki).cast
-      := by
-      simp only [Nat.succ_eq_add_one, Fin.toNat_eq_val, Fin.val_last, Finset.sum_apply,
-        Pi.mul_apply, Pi.pow_apply, Pi.natCast_apply]
-      rw [hXIndep]
-      sorry
+  := by
+    rw [k_moment_sum_expand]
+    simp only [Nat.succ_eq_add_one, Fin.toNat_eq_val, Finset.sum_apply,
+      Pi.mul_apply, Pi.pow_apply, Pi.natCast_apply]
+    rw [integral_finset_sum]
+    case hf; intro i _
+    rw [integrable_mul_const_iff]
+    case hf.hc
+    · rw [isUnit_iff_ne_zero, ne_eq, Nat.cast_eq_zero, <- ne_eq]
+      apply Nat.choose_ne_zero
+      rw [@Nat.le_iff_lt_add_one]
+      exact i.is_lt
+
+    sorry
+
+
+
+      -- rw [Integrable.const_mul]
+
+      -- have h : Integrable (X |> ifun_drop_last |> isum_rv) ^ ki.toNat * (n |> Fin.last |> X) ^ (k - ki) * k.choose ki μ := sorry
+      -- rw [Nat.add_one]
+      -- rw [integral_mul_const_of_integrable]
+      -- rw [hXIndep]

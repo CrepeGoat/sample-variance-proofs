@@ -32,3 +32,14 @@ def ifun_first_n
   apply f
   apply Fin.castLT j
   apply lt_trans (Fin.is_lt j) (Fin.is_lt i)
+
+def ifun_drop_last
+  {R : Type u_1}
+  {n : ℕ}
+  (f : (Fin n.succ) → R)
+  : (Fin n) → R
+  := by
+  intro j
+  apply f
+  apply Fin.castLT j
+  apply lt_trans (Fin.is_lt j) (n |> Fin.last |> Fin.is_lt)
