@@ -20,6 +20,31 @@ noncomputable def isum_rv
   : (Ω → R) := fun (ω : Ω) => (∑ i : Fin n, X i ω)
 
 
+-- set_option maxHeartbeats 10000000 in
+theorem iindepfun_then_indep_isum_drop_last_last
+  {Ω : Type u_1} [m : MeasurableSpace Ω]
+  {μ : Measure Ω} [IsProbabilityMeasure μ]
+  {n : ℕ}
+  {X : Fin n.succ → Ω → ℝ}
+  (hXIndep : iIndepFun X μ)
+  (f : (Fin n → ℝ) → ℝ)
+  : IndepFun ((X |> ifun_drop_last |> isum_rv)) (n |> Fin.last |> X) μ
+  := by
+  -- induction n
+
+  have S1 : Finset (Fin n.succ) := Finset.range n
+  have S2 : Finset (Fin n.succ) := {Fin.last n}
+  have hS : Disjoint S1 S2 := sorry
+
+  -- iIndep.precomp
+  unfold IndepFun
+  intro t1 t2 a a_1
+  simp_all only [Nat.succ_eq_add_one, Set.mem_setOf_eq, Kernel.const_apply, ae_dirac_eq,
+    Filter.eventually_pure]
+  -- rw?
+  -- exact?
+  sorry
+
 example
   {Ω : Type u_1} [m : MeasurableSpace Ω]
   {μ : Measure Ω} [IsProbabilityMeasure μ]
