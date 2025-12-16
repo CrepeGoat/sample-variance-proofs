@@ -1,5 +1,13 @@
 import Mathlib
 
+import Mathlib.Analysis.Normed.Group.Basic
+import Mathlib.MeasureTheory.MeasurableSpace.Defs
+import Mathlib.MeasureTheory.Measure.MeasureSpaceDef
+import Mathlib.MeasureTheory.Measure.Typeclasses.Probability
+import Mathlib.Probability.Independence.Basic
+import Mathlib.Probability.Moments.Basic
+import Mathlib.MeasureTheory.Function.L1Space.Integrable
+
 import SampleVariance.PowOfSums
 
 -- https://leanprover-community.github.io/blog/posts/basic-probability-in-mathlib/
