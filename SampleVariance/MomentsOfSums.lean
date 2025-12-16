@@ -1,4 +1,4 @@
-import Mathlib
+-- import Mathlib
 
 import Mathlib.Analysis.Normed.Group.Basic
 import Mathlib.MeasureTheory.MeasurableSpace.Defs
@@ -8,15 +8,41 @@ import Mathlib.Probability.Independence.Basic
 import Mathlib.Probability.Moments.Basic
 import Mathlib.MeasureTheory.Function.L1Space.Integrable
 
-import SampleVariance.PowOfSums
+import Mathlib.Algebra.Field.Defs
+import Mathlib.Algebra.BigOperators.Group.Finset.Basic
+import Mathlib.Data.Fin.Basic
+import Mathlib.Data.Nat.Choose.Sum
+import Mathlib.Data.Real.Basic
+import Mathlib.Algebra.BigOperators.Fin
 
--- https://leanprover-community.github.io/blog/posts/basic-probability-in-mathlib/
+open Finset BigOperators
 open MeasureTheory ProbabilityTheory NNReal
 open scoped ENNReal
 
 
--- https://leanprover-community.githb.io/blog/posts/basic-probability-in-mathlib/#:~:text=Measure%20%CE%A9.-,Identically%20distributed,-IdentDistrib%20X%20Y
--- https://leanprover-community.github.io/blog/posts/basic-probability-in-mathlib/#:~:text=of%20the%20indicator).-,Independence,-Mathlib%20has%20several
+-- working proof of the first set of equations w/o expectations
+theorem pow_sum_castSucc_eq_sum_add_pow
+  {R : Type u_1} [CommSemiring R]
+  {n : ℕ}
+  {f : Fin (n.succ) → R}
+  {k : ℕ}
+  : (∑ i : Fin n.succ, f i) ^ k
+    = ∑ j : Fin k.succ, (∑ i : Fin n, f i.castSucc) ^ j.toNat
+    * (f (Fin.last n)) ^ (k - j) * k.choose j
+  := by
+  rw [Fin.sum_univ_castSucc, add_pow, Finset.sum_range, Nat.succ_eq_add_one]
+  rfl
+
+def ifun_drop_last
+  {R : Type u_1}
+  {n : ℕ}
+  (f : (Fin n.succ) → R)
+  : (Fin n) → R
+  := by
+  intro j
+  apply f
+  apply Fin.castLT j
+  apply lt_trans (Fin.is_lt j) (n |> Fin.last |> Fin.is_lt)
 
 
 noncomputable def isum_rv
@@ -24,59 +50,10 @@ noncomputable def isum_rv
   {Ω : Type u_2} [MeasurableSpace Ω]
   {n : ℕ}
   (X : (Fin n) → Ω → R)
-  -- (hX : (i : Fin n) → Measurable (X i))
   : (Ω → R) := fun (ω : Ω) => (∑ i : Fin n, X i ω)
 
 
--- -- set_option maxHeartbeats 10000000 in
--- theorem iindepfun_then_indep_isum_drop_last_last
---   {Ω : Type u_1} [MeasurableSpace Ω]
---   {μ : Measure Ω} [IsProbabilityMeasure μ]
---   {n : ℕ}
---   {X : Fin n.succ → Ω → ℝ}
---   (hXIndep : iIndepFun X μ)
---   (m : Fin n)
---   : IndepFun
---     (m.castSucc |> ifun_first_n X |> isum_rv)
---     (n |> Fin.last |> X) μ
---   := by
---   induction m
---   case mk
---   ·
---   sorry
-
-example
-  {Ω : Type u_1} [m : MeasurableSpace Ω]
-  {μ : Measure Ω} [IsProbabilityMeasure μ]
-  {n : ℕ}
-  {X : Fin n → Ω → ℝ}
-  -- (hX : (i : Fin n) → Measurable (X i))
-  (hXIntegrable : (i : Fin n) → Integrable (X i) μ)
-  : (moment (isum_rv X) 1 μ = ∑ i : Fin n, moment (X i) 1 μ)
-  := by
-  unfold isum_rv moment
-  simp only [pow_one, Pi.pow_apply]
-  rw [integral_finset_sum]
-  intro i _
-  exact hXIntegrable i
-
--- https://leanprover-community.github.io/mathlib4_docs/Mathlib/Probability/Independence/Integration.html#ProbabilityTheory.IndepFun.integral_mul_eq_mul_integral
-
-
-example
-  {Ω : Type u_1} [m : MeasurableSpace Ω]
-  {μ : Measure Ω} [IsProbabilityMeasure μ]
-  {n : ℕ}
-  {X : Fin n → Ω → ℝ}
-  -- (hXIntegrable : (i : Fin n) → Integrable (X i) μ)
-  (hXIndep : iIndepFun X μ)
-  : (moment (∏ i : Fin n, X i) 1 μ = ∏ i : Fin n, moment (X i) 1 μ)
-  := by
-  unfold moment
-  simp only [Finset.prod_apply, Pi.pow_apply, pow_one]
-  sorry
-
-
+-- working proof of expanding the first equations in the expectation
 theorem k_moment_sum_expand
   {Ω : Type u_1} [m : MeasurableSpace Ω]
   {μ : Measure Ω} [IsProbabilityMeasure μ]
@@ -100,16 +77,16 @@ theorem k_moment_sum_expand
     rfl
 
 
-set_option maxHeartbeats 0 in
+-- unfinished proof of the desired final expression
 theorem k_moment_sum_recursive
   {Ω : Type u_1} [m : MeasurableSpace Ω]
   {μ : Measure Ω} [IsProbabilityMeasure μ]
   {n : ℕ}
   (X : Fin n.succ → Ω → ℝ)
   (k : ℕ)
-  (hXIntegrable : (i : Fin n.succ) → Integrable (X i) μ)
+  -- do I need v-this?
+  -- (hXIntegrable : Integrable ((isum_rv X) ^ k) μ)
   (hXIndep : iIndepFun X μ)
-  -- (hXIdent : (i : Fin n.succ) → (j : Fin n.succ) → IdentDistrib (X i) (X j) μ μ)
   : moment (isum_rv X) k μ
     = ∑ ki : Fin k.succ, moment (X |> ifun_drop_last |> isum_rv) ki.toNat μ
       * moment (n |> Fin.last |> X) (k - ki) μ * (k.choose ki).cast
@@ -128,13 +105,3 @@ theorem k_moment_sum_recursive
         exact i.is_lt
       sorry
     sorry
-
-
-
-
-      -- rw [Integrable.const_mul]
-
-      -- have h : Integrable (X |> ifun_drop_last |> isum_rv) ^ ki.toNat * (n |> Fin.last |> X) ^ (k - ki) * k.choose ki μ := sorry
-      -- rw [Nat.add_one]
-      -- rw [integral_mul_const_of_integrable]
-      -- rw [hXIndep]
