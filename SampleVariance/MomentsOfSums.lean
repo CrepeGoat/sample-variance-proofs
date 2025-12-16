@@ -55,6 +55,20 @@ example
 -- https://leanprover-community.github.io/mathlib4_docs/Mathlib/Probability/Independence/Integration.html#ProbabilityTheory.IndepFun.integral_mul_eq_mul_integral
 
 
+example
+  {Ω : Type u_1} [m : MeasurableSpace Ω]
+  {μ : Measure Ω} [IsProbabilityMeasure μ]
+  {n : ℕ}
+  {X : Fin n → Ω → ℝ}
+  -- (hXIntegrable : (i : Fin n) → Integrable (X i) μ)
+  (hXIndep : iIndepFun X μ)
+  : (moment (∏ i : Fin n, X i) 1 μ = ∏ i : Fin n, moment (X i) 1 μ)
+  := by
+  unfold moment
+  simp only [Finset.prod_apply, Pi.pow_apply, pow_one]
+  sorry
+
+
 theorem k_moment_sum_expand
   {Ω : Type u_1} [m : MeasurableSpace Ω]
   {μ : Measure Ω} [IsProbabilityMeasure μ]
@@ -89,21 +103,24 @@ theorem k_moment_sum_recursive
   (hXIndep : iIndepFun X μ)
   -- (hXIdent : (i : Fin n.succ) → (j : Fin n.succ) → IdentDistrib (X i) (X j) μ μ)
   : moment (isum_rv X) k μ
-    = ∑ ki : Fin k.succ, μ[(X |> ifun_drop_last |> isum_rv) ^ ki.toNat]
-      * μ[(n |> Fin.last |> X) ^ (k - ki)] * (k.choose ki).cast
+    = ∑ ki : Fin k.succ, moment (X |> ifun_drop_last |> isum_rv) ki.toNat μ
+      * moment (n |> Fin.last |> X) (k - ki) μ * (k.choose ki).cast
   := by
     rw [k_moment_sum_expand]
     simp only [Nat.succ_eq_add_one, Fin.toNat_eq_val, Finset.sum_apply,
       Pi.mul_apply, Pi.pow_apply, Pi.natCast_apply]
     rw [integral_finset_sum]
-    case hf; intro i _
-    rw [integrable_mul_const_iff]
-    case hf.hc
-    · rw [isUnit_iff_ne_zero, ne_eq, Nat.cast_eq_zero, <- ne_eq]
-      apply Nat.choose_ne_zero
-      rw [@Nat.le_iff_lt_add_one]
-      exact i.is_lt
+    case hf =>
+      intro i _
+      rw [integrable_mul_const_iff]
+      case hc =>
+        rw [isUnit_iff_ne_zero, ne_eq, Nat.cast_eq_zero, <- ne_eq]
+        apply Nat.choose_ne_zero
+        rw [@Nat.le_iff_lt_add_one]
+        exact i.is_lt
+      sorry
     sorry
+
 
 
 
