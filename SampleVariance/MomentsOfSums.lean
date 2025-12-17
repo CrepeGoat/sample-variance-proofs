@@ -96,7 +96,7 @@ theorem k_moment_sum_recursive
       apply (hX _).mono_exponent
       simp_all only [mem_range, ENNReal.natCast_sub, tsub_le_iff_right, self_le_add_right]
 
-theorem iIndepFun_succ
+lemma iIndepFun_succ
   {Ω : Type u_1} [m : MeasurableSpace Ω]
   {P : Measure Ω} [mP : IsFiniteMeasure P]
   {n : ℕ}
@@ -110,7 +110,7 @@ theorem iIndepFun_succ
   intro s
   sorry
 
-theorem moment_eq_if_identdistrib
+lemma moment_eq_if_identdistrib
   {Ω : Type u_1} [m : MeasurableSpace Ω]
   {P : Measure Ω} [mP : IsFiniteMeasure P]
   {n k : ℕ}
@@ -177,11 +177,10 @@ theorem _1_moment_sum
     case hX =>
       intro i k
       exact (hX i.castSucc k.castSucc)
-    case hXIndep =>
-      apply iIndepFun_succ
-      exact hXIndep
-    rewrite [zero_moment_eq_one]
-    rewrite [mul_one, one_mul, add_one_mul, hn, add_comm, add_left_inj, mul_eq_mul_left_iff]
+    case hXIndep => exact iIndepFun_succ hXIndep
+
+    rewrite [zero_moment_eq_one, mul_one, one_mul]
+    rewrite [add_one_mul, hn, add_comm, add_left_inj, mul_eq_mul_left_iff]
     constructor
     case h =>
       apply moment_eq_if_identdistrib
@@ -193,3 +192,45 @@ theorem _1_moment_sum
       intro i j
       exact hXIdent i.castSucc j.castSucc
     case hXIndep => exact iIndepFun_succ hXIndep
+
+theorem _2_moment_sum
+  {Ω : Type u_1} [m : MeasurableSpace Ω]
+  {P : Measure Ω} [mP : IsProbabilityMeasure P]
+  {n : ℕ}
+  (X : Fin (n + 1) → Ω → ℝ)
+  (hX : ∀ i, ∀ k : Fin 3, MemLp (X i) k P)
+  (hXIndep : iIndepFun X P)
+  (hXIdent : (i : Fin (n + 1)) → (j : Fin (n + 1)) → IdentDistrib (X i) (X j) P P)
+  : moment (∑ i, X i) 2 P
+    = moment (X (Fin.last n)) 2 P + n * moment (X (Fin.last n)) 1 P
+  := by
+  induction n
+  case zero =>
+    simp only [Nat.reduceAdd, univ_unique, Fin.default_eq_zero, Fin.isValue, sum_singleton,
+      Fin.last_zero, CharP.cast_eq_zero, zero_mul, add_zero]
+  case succ n hn =>
+    -- simp only [Nat.cast_add, Nat.cast_one]
+    rewrite [k_moment_sum_recursive X ?hX hXIndep]
+    case hX =>
+      intro i
+      exact (hX i 2)
+    rewrite [Finset.sum_range, Fin.sum_univ_castSucc]
+    simp only [Nat.reduceAdd, Fin.coe_castSucc, Fin.sum_univ_two, Fin.isValue, Fin.coe_ofNat_eq_mod,
+      Nat.zero_mod, Nat.choose_zero_right, Nat.cast_one, tsub_zero, one_mul, Nat.mod_succ,
+      Nat.choose_succ_self_right, Nat.cast_ofNat, Nat.add_one_sub_one, Fin.reduceLast,
+      Nat.choose_self, tsub_self, Nat.cast_add]
+
+    rewrite [_0_moment_sum]
+    case hX =>
+      intro i k
+      exact (hX i.castSucc k.castSucc.castSucc)
+    case hXIndep => exact iIndepFun_succ hXIndep
+    rewrite [_1_moment_sum]
+    case hX =>
+      intro i k
+      exact (hX i.castSucc k.castSucc)
+    case hXIndep => exact iIndepFun_succ hXIndep
+
+    rewrite [zero_moment_eq_one, mul_one, one_mul]
+    rewrite [add_right_inj]
+    sorry
