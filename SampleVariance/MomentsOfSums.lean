@@ -96,12 +96,47 @@ theorem k_moment_sum_recursive
       apply (hX _).mono_exponent
       simp_all only [mem_range, ENNReal.natCast_sub, tsub_le_iff_right, self_le_add_right]
 
-example
+theorem iIndepFun_succ
+  {Ω : Type u_1} [m : MeasurableSpace Ω]
+  {P : Measure Ω} [mP : IsFiniteMeasure P]
+  {n : ℕ}
+  (X : Fin (n + 1) → Ω → ℝ)
+  (hXIndep : iIndepFun X P)
+  : iIndepFun (fun i : Fin n => X i.castSucc) P
+  := by
+  unfold iIndepFun Kernel.iIndepFun Kernel.iIndep Kernel.iIndepSets
+  unfold iIndepFun Kernel.iIndepFun Kernel.iIndep Kernel.iIndepSets at hXIndep
+  simp_all only
+  intro s
+  sorry
+
+theorem moment_eq_if_identdistrib
+  {Ω : Type u_1} [m : MeasurableSpace Ω]
+  {P : Measure Ω} [mP : IsFiniteMeasure P]
+  {n k : ℕ}
+  {i j : Fin n}
+  (X : Fin (n) → Ω → ℝ)
+  (hXIdent : IdentDistrib (X i) (X j) P P)
+  : moment (X i) k P = moment (X j) k P
+  := by
+  sorry
+
+theorem zero_moment_eq_one
+  {Ω : Type u_1} [m : MeasurableSpace Ω]
+  {P : Measure Ω} [mP : IsProbabilityMeasure P]
+  {n : ℕ}
+  (X : Ω → ℝ)
+  : moment X 0 P = 1
+  := by
+  unfold moment
+  simp only [pow_zero, Pi.one_apply, integral_const, measureReal_univ_eq_one, smul_eq_mul, mul_one]
+
+theorem _0_moment_sum
   {Ω : Type u_1} [m : MeasurableSpace Ω]
   {P : Measure Ω} [IsProbabilityMeasure P]
   {n : ℕ}
   (X : Fin n.succ → Ω → ℝ)
-  (hX : ∀ i, MemLp (X i) 0 P)
+  (hX : ∀ i, ∀ k : Fin 1, MemLp (X i) k P)
   (hXIndep : iIndepFun X P)
   -- (hXIdent : (i : Fin n.succ) → (j : Fin n.succ) → IdentDistrib (X i) (X j) μ)
   : moment (∑ i, X i) 0 P
@@ -111,14 +146,14 @@ example
     simp only [Nat.succ_eq_add_one, pow_zero, Pi.one_apply, integral_const, measureReal_univ_eq_one,
       smul_eq_mul, mul_one]
 
-example
+theorem _1_moment_sum
   {Ω : Type u_1} [m : MeasurableSpace Ω]
   {P : Measure Ω} [mP : IsProbabilityMeasure P]
   {n : ℕ}
   (X : Fin (n + 1) → Ω → ℝ)
-  (hX : ∀ i, MemLp (X i) 1 P)
+  (hX : ∀ i, ∀ k : Fin 2, MemLp (X i) k P)
   (hXIndep : iIndepFun X P)
-  -- (hXIdent : (i : Fin n.succ) → (j : Fin n.succ) → IdentDistrib (X i) (X j) μ)
+  (hXIdent : (i : Fin n.succ) → (j : Fin n.succ) → IdentDistrib (X i) (X j) P P)
   : moment (∑ i, X i) 1 P
     = (n + 1) * moment (X (Fin.last n)) 1 P
   := by
@@ -128,12 +163,28 @@ example
       CharP.cast_eq_zero, zero_add, Fin.last_zero, one_mul]
   case succ n hn =>
     simp only [Nat.cast_add, Nat.cast_one]
-    rw [k_moment_sum_recursive X ?hX hXIndep]
+    rewrite [k_moment_sum_recursive X ?hX hXIndep]
     case hX =>
       intro i
-      rw [Nat.cast_one]
-      exact hX i
+      simp only [Nat.succ_eq_add_one] at i
+      exact (hX i 1)
     simp only [Nat.reduceAdd]
-    rw [Finset.sum_range, Fin.sum_univ_castSucc]
-    simp
+    rewrite [Finset.sum_range, Fin.sum_univ_castSucc]
+    simp only [univ_unique, Fin.default_eq_zero, Fin.isValue, Fin.coe_castSucc, Fin.val_eq_zero,
+      Nat.choose_succ_self_right, zero_add, Nat.cast_one, tsub_zero, one_mul, sum_const,
+      card_singleton, one_smul, Fin.reduceLast, Fin.coe_ofNat_eq_mod, Nat.mod_succ, Nat.choose_self,
+      tsub_self]
+
+    rewrite [_0_moment_sum]
+    case hX =>
+      intro i k
+      simp only [Nat.succ_eq_add_one] at i
+      exact (hX i.castSucc k.castSucc)
+    case hXIndep =>
+      apply iIndepFun_succ
+      exact hXIndep
+
+    -- rw [moment_eq_if_identdistrib]
+    -- case hXIdent =>
+
     sorry
