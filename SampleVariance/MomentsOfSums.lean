@@ -47,7 +47,7 @@ theorem k_moment_sum_recursive
   {Ω : Type u_1} [m : MeasurableSpace Ω]
   {P : Measure Ω} [IsFiniteMeasure P]
   {n k : ℕ}
-  (X : Fin n.succ → Ω → ℝ)
+  (X : Fin (n + 1) → Ω → ℝ)
   (hX : ∀ i, MemLp (X i) k P)
   (hXIndep : iIndepFun X P)
   : moment (∑ i, X i) k P
@@ -157,32 +157,53 @@ theorem _1_moment_sum
   : moment (∑ i, X i) 1 P
     = (n + 1) * moment (X (Fin.last n)) 1 P
   := by
-  induction n
-  case zero =>
-    simp only [Nat.reduceAdd, univ_unique, Fin.default_eq_zero, Fin.isValue, sum_singleton,
-      CharP.cast_eq_zero, zero_add, Fin.last_zero, one_mul]
-  case succ n hn =>
-    simp only [Nat.cast_add, Nat.cast_one]
-    rewrite [k_moment_sum_recursive X ?hX hXIndep]
-    case hX =>
-      intro i
-      simp only [Nat.succ_eq_add_one] at i
-      exact (hX i 1)
-    simp only [Nat.reduceAdd]
-    rewrite [Finset.sum_range, Fin.sum_univ_castSucc]
-    simp only [univ_unique, Fin.default_eq_zero, Fin.isValue, Fin.coe_castSucc, Fin.val_eq_zero,
-      Nat.choose_succ_self_right, zero_add, Nat.cast_one, tsub_zero, one_mul, sum_const,
-      card_singleton, one_smul, Fin.reduceLast, Fin.coe_ofNat_eq_mod, Nat.mod_succ, Nat.choose_self,
-      tsub_self]
+  rewrite [k_moment_sum_recursive X ?hX hXIndep]
+  case hX =>
+    intro i
+    simp only [Nat.succ_eq_add_one] at i
+    exact (hX i 1)
+  simp only [Nat.reduceAdd]
+  rewrite [Finset.sum_range]
+  simp only [Fin.sum_univ_two, Fin.isValue, Fin.coe_ofNat_eq_mod, Nat.zero_mod,
+    Nat.choose_succ_self_right, zero_add, Nat.cast_one, tsub_zero, one_mul, Nat.mod_succ,
+    Nat.choose_self, tsub_self]
+  rewrite [zero_moment_eq_one, zero_moment_eq_one]
+  simp only [mul_one, one_mul]
+  rewrite [add_comm, add_one_mul, add_left_inj]
 
-    rewrite [_0_moment_sum]
-    case hX =>
-      intro i k
-      simp only [Nat.succ_eq_add_one] at i
-      exact (hX i.castSucc k.castSucc)
-    case hXIndep =>
-      apply iIndepFun_succ
-      exact hXIndep
+  induction n
+  case zero => simp only [univ_eq_empty, sum_empty, ne_eq, one_ne_zero, not_false_eq_true,
+    moment_zero, CharP.cast_eq_zero, Fin.last_zero, Fin.isValue, zero_mul]
+  case succ n hn =>
+    rewrite [Nat.cast_add, Nat.cast_one, add_one_mul]
+    rewrite [<- hn]
+    have hn2 := (hn (fun i => X i.castSucc))
+  -- induction n
+  -- case zero =>
+  --   simp only [Nat.reduceAdd, univ_unique, Fin.default_eq_zero, Fin.isValue, sum_singleton,
+  --     CharP.cast_eq_zero, zero_add, Fin.last_zero, one_mul]
+  -- case succ n hn =>
+  --   simp only [Nat.cast_add, Nat.cast_one]
+  --   rewrite [k_moment_sum_recursive X ?hX hXIndep]
+  --   case hX =>
+  --     intro i
+  --     simp only [Nat.succ_eq_add_one] at i
+  --     exact (hX i 1)
+  --   simp only [Nat.reduceAdd]
+  --   rewrite [Finset.sum_range, Fin.sum_univ_castSucc]
+  --   simp only [univ_unique, Fin.default_eq_zero, Fin.isValue, Fin.coe_castSucc, Fin.val_eq_zero,
+  --     Nat.choose_succ_self_right, zero_add, Nat.cast_one, tsub_zero, one_mul, sum_const,
+  --     card_singleton, one_smul, Fin.reduceLast, Fin.coe_ofNat_eq_mod, Nat.mod_succ, Nat.choose_self,
+  --     tsub_self]
+
+  --   rewrite [_0_moment_sum]
+  --   case hX =>
+  --     intro i k
+  --     simp only [Nat.succ_eq_add_one] at i
+  --     exact (hX i.castSucc k.castSucc)
+  --   case hXIndep =>
+  --     apply iIndepFun_succ
+  --     exact hXIndep
 
     -- rw [moment_eq_if_identdistrib]
     -- case hXIdent =>
