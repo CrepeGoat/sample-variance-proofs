@@ -112,14 +112,15 @@ lemma iIndepFun_succ
 
 lemma moment_eq_if_identdistrib
   {Ω : Type u_1} [m : MeasurableSpace Ω]
-  {P : Measure Ω} [mP : IsFiniteMeasure P]
+  {P : Measure Ω} [IsFiniteMeasure P]
   {n k : ℕ}
   {i j : Fin n}
-  (X : Fin (n) → Ω → ℝ)
+  {X : Fin (n) → Ω → ℝ}
   (hXIdent : IdentDistrib (X i) (X j) P P)
   : moment (X i) k P = moment (X j) k P
   := by
-  sorry
+  have h := IdentDistrib.comp hXIdent (Measurable.pow_const measurable_id k)
+  apply h.integral_eq
 
 theorem zero_moment_eq_one
   {Ω : Type u_1} [m : MeasurableSpace Ω]
