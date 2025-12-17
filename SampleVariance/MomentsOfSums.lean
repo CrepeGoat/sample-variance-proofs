@@ -46,9 +46,8 @@ theorem MemLp.integrable_pow
 theorem k_moment_sum_recursive
   {Ω : Type u_1} [m : MeasurableSpace Ω]
   {P : Measure Ω} [IsFiniteMeasure P]
-  {n : ℕ}
+  {n k : ℕ}
   (X : Fin n.succ → Ω → ℝ)
-  (k : ℕ)
   (hX : ∀ i, MemLp (X i) k P)
   (hXIndep : iIndepFun X P)
   : moment (∑ i, X i) k P
@@ -96,3 +95,45 @@ theorem k_moment_sum_recursive
     · apply MemLp.integrable_pow
       apply (hX _).mono_exponent
       simp_all only [mem_range, ENNReal.natCast_sub, tsub_le_iff_right, self_le_add_right]
+
+example
+  {Ω : Type u_1} [m : MeasurableSpace Ω]
+  {P : Measure Ω} [IsProbabilityMeasure P]
+  {n : ℕ}
+  (X : Fin n.succ → Ω → ℝ)
+  (hX : ∀ i, MemLp (X i) 0 P)
+  (hXIndep : iIndepFun X P)
+  -- (hXIdent : (i : Fin n.succ) → (j : Fin n.succ) → IdentDistrib (X i) (X j) μ)
+  : moment (∑ i, X i) 0 P
+    = 1
+  := by
+    unfold moment
+    simp only [Nat.succ_eq_add_one, pow_zero, Pi.one_apply, integral_const, measureReal_univ_eq_one,
+      smul_eq_mul, mul_one]
+
+example
+  {Ω : Type u_1} [m : MeasurableSpace Ω]
+  {P : Measure Ω} [mP : IsProbabilityMeasure P]
+  {n : ℕ}
+  (X : Fin (n + 1) → Ω → ℝ)
+  (hX : ∀ i, MemLp (X i) 1 P)
+  (hXIndep : iIndepFun X P)
+  -- (hXIdent : (i : Fin n.succ) → (j : Fin n.succ) → IdentDistrib (X i) (X j) μ)
+  : moment (∑ i, X i) 1 P
+    = (n + 1) * moment (X (Fin.last n)) 1 P
+  := by
+  induction n
+  case zero =>
+    simp only [Nat.reduceAdd, univ_unique, Fin.default_eq_zero, Fin.isValue, sum_singleton,
+      CharP.cast_eq_zero, zero_add, Fin.last_zero, one_mul]
+  case succ n hn =>
+    simp only [Nat.cast_add, Nat.cast_one]
+    rw [k_moment_sum_recursive X ?hX hXIndep]
+    case hX =>
+      intro i
+      rw [Nat.cast_one]
+      exact hX i
+    simp only [Nat.reduceAdd]
+    rw [Finset.sum_range, Fin.sum_univ_castSucc]
+    simp
+    sorry
