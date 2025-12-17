@@ -1,4 +1,4 @@
--- import Mathlib
+import Mathlib
 
 import Mathlib.Analysis.Normed.Group.Basic
 import Mathlib.MeasureTheory.MeasurableSpace.Defs
@@ -56,7 +56,9 @@ theorem k_moment_sum_recursive
     * moment (X (Fin.last n)) (k - l) P
     * moment (∑ i : Fin n, X i.castSucc) l P
   := by
-  have key (l : ℕ) : (fun ω => X (Fin.last n) ω ^ (k - l)) ⟂ᵢ[P] fun ω => (∑ i : Fin n, X i.castSucc ω) ^ l
+  have key
+    (l : ℕ)
+    : (fun ω => X (Fin.last n) ω ^ (k - l)) ⟂ᵢ[P] fun ω => (∑ i : Fin n, X i.castSucc ω) ^ l
     := by
     apply IndepFun.comp
     · symm
@@ -80,8 +82,11 @@ theorem k_moment_sum_recursive
       ring
     · exact key l
     · exact (hX _).aestronglyMeasurable.pow (k - l)
-    · convert (aestronglyMeasurable_sum (Finset.univ) (fun (i : Fin n) _ ↦ (hX i.castSucc).aestronglyMeasurable)).pow l
-      simp
+    · convert (
+        aestronglyMeasurable_sum (Finset.univ)
+        (fun (i : Fin n) _ ↦ (hX i.castSucc).aestronglyMeasurable)
+      ).pow l
+      simp only [Pi.pow_apply, sum_apply]
   · intro l hl
     apply Integrable.mul_const
     apply IndepFun.integrable_mul
@@ -104,10 +109,17 @@ lemma iIndepFun_succ
   (hXIndep : iIndepFun X P)
   : iIndepFun (fun i : Fin n => X i.castSucc) P
   := by
-  unfold iIndepFun Kernel.iIndepFun Kernel.iIndep Kernel.iIndepSets
-  unfold iIndepFun Kernel.iIndepFun Kernel.iIndep Kernel.iIndepSets at hXIndep
-  simp_all only
-  intro s
+  unfold iIndepFun Kernel.iIndepFun Kernel.iIndep Kernel.iIndepSets Kernel.const
+  unfold iIndepFun Kernel.iIndepFun Kernel.iIndep Kernel.iIndepSets Kernel.const at hXIndep
+  simp_all only [Set.mem_setOf_eq, Kernel.coe_mk, ae_dirac_eq, Filter.eventually_pure]
+  intro s f hsf
+
+  have s' := Finset.map Fin.castSuccEmb s
+  have f' : Fin (n + 1) → Set Ω := fun i => by
+    sorry
+  unfold MeasurableSet at hsf
+  -- simp at hsf
+  #check hXIndep s'
   sorry
 
 lemma moment_eq_if_identdistrib
@@ -131,11 +143,12 @@ theorem zero_moment_eq_one
   unfold moment
   simp only [pow_zero, Pi.one_apply, integral_const, measureReal_univ_eq_one, smul_eq_mul, mul_one]
 
+set_option linter.unusedVariables false in
 theorem _0_moment_sum
   {Ω : Type u_1} [m : MeasurableSpace Ω]
   {P : Measure Ω} [IsProbabilityMeasure P]
   {n : ℕ}
-  (X : Fin (n + 1) → Ω → ℝ)
+  {X : Fin (n + 1) → Ω → ℝ}
   (hX : ∀ i, ∀ k : Fin 1, MemLp (X i) k P)
   (hXIndep : iIndepFun X P)
   -- (hXIdent : (i : Fin n.succ) → (j : Fin n.succ) → IdentDistrib (X i) (X j) μ)
@@ -150,7 +163,7 @@ theorem _1_moment_sum
   {Ω : Type u_1} [m : MeasurableSpace Ω]
   {P : Measure Ω} [mP : IsProbabilityMeasure P]
   {n : ℕ}
-  (X : Fin (n + 1) → Ω → ℝ)
+  {X : Fin (n + 1) → Ω → ℝ}
   (hX : ∀ i, ∀ k : Fin 2, MemLp (X i) k P)
   (hXIndep : iIndepFun X P)
   (hXIdent : (i : Fin (n + 1)) → (j : Fin (n + 1)) → IdentDistrib (X i) (X j) P P)
@@ -233,5 +246,6 @@ theorem _2_moment_sum
     case hXIndep => exact iIndepFun_succ hXIndep
 
     rewrite [zero_moment_eq_one, mul_one, one_mul]
-    rewrite [add_right_inj]
+    case hXIdent => sorry
+    -- rewrite [add_right_inj]
     sorry
