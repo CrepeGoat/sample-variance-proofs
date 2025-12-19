@@ -1,4 +1,4 @@
-import Mathlib
+-- import Mathlib
 
 import Mathlib.Analysis.Normed.Group.Basic
 import Mathlib.MeasureTheory.MeasurableSpace.Defs
@@ -101,26 +101,16 @@ theorem k_moment_sum_recursive
       apply (hX _).mono_exponent
       simp_all only [mem_range, ENNReal.natCast_sub, tsub_le_iff_right, self_le_add_right]
 
+-- https://leanprover.zulipchat.com/#narrow/channel/113489-new-members/topic/stuck.20on.20proof.20for.20iIndepFun.20on.20subset.20of.20indices/near/564583898
 lemma iIndepFun_succ
-  {Ω : Type u_1} [m : MeasurableSpace Ω]
-  {P : Measure Ω} [mP : IsFiniteMeasure P]
+  {Ω : Type u_1} [MeasurableSpace Ω]
+  {P : Measure Ω}
   {n : ℕ}
   {X : Fin (n + 1) → Ω → ℝ}
   (hXIndep : iIndepFun X P)
   : iIndepFun (fun i : Fin n => X i.castSucc) P
   := by
-  unfold iIndepFun Kernel.iIndepFun Kernel.iIndep Kernel.iIndepSets Kernel.const
-  unfold iIndepFun Kernel.iIndepFun Kernel.iIndep Kernel.iIndepSets Kernel.const at hXIndep
-  simp_all only [Set.mem_setOf_eq, Kernel.coe_mk, ae_dirac_eq, Filter.eventually_pure]
-  intro s f hsf
-
-  have s' := Finset.map Fin.castSuccEmb s
-  have f' : Fin (n + 1) → Set Ω := fun i => by
-    sorry
-  unfold MeasurableSet at hsf
-  -- simp at hsf
-  #check hXIndep s'
-  sorry
+  exact iIndepFun.precomp (f := X) (Fin.castSucc_injective n) hXIndep
 
 lemma moment_eq_if_identdistrib
   {Ω : Type u_1} [m : MeasurableSpace Ω]
@@ -211,19 +201,27 @@ theorem _2_moment_sum
   {Ω : Type u_1} [m : MeasurableSpace Ω]
   {P : Measure Ω} [mP : IsProbabilityMeasure P]
   {n : ℕ}
-  (X : Fin (n + 1) → Ω → ℝ)
+  {X : Fin (n + 1) → Ω → ℝ}
   (hX : ∀ i, ∀ k : Fin 3, MemLp (X i) k P)
   (hXIndep : iIndepFun X P)
-  (hXIdent : (i : Fin (n + 1)) → (j : Fin (n + 1)) → IdentDistrib (X i) (X j) P P)
+  (hXIdent : (i j : Fin (n + 1)) → IdentDistrib (X i) (X j) P P)
   : moment (∑ i, X i) 2 P
-    = moment (X (Fin.last n)) 2 P + n * moment (X (Fin.last n)) 1 P
+    = (n + 1) * moment (X (Fin.last n)) 2 P + (n + 1) * n * (moment (X (Fin.last n)) 1 P) ^ 2
   := by
   induction n
   case zero =>
     simp only [Nat.reduceAdd, univ_unique, Fin.default_eq_zero, Fin.isValue, sum_singleton,
-      Fin.last_zero, CharP.cast_eq_zero, zero_mul, add_zero]
+      CharP.cast_eq_zero, zero_add, Fin.last_zero, one_mul, mul_zero, zero_mul, add_zero]
   case succ n hn =>
-    -- simp only [Nat.cast_add, Nat.cast_one]
+    have hn2 := by
+      apply hn
+      case hX =>
+        intro i
+        exact hX i.castSucc
+      case hXIndep => exact iIndepFun_succ hXIndep
+      case hXIdent =>
+        intro i j
+        exact hXIdent i.castSucc j.castSucc
     rewrite [k_moment_sum_recursive X ?hX hXIndep]
     case hX =>
       intro i
@@ -233,19 +231,20 @@ theorem _2_moment_sum
       Nat.zero_mod, Nat.choose_zero_right, Nat.cast_one, tsub_zero, one_mul, Nat.mod_succ,
       Nat.choose_succ_self_right, Nat.cast_ofNat, Nat.add_one_sub_one, Fin.reduceLast,
       Nat.choose_self, tsub_self, Nat.cast_add]
-
-    rewrite [_0_moment_sum]
+    rewrite [hn2, _1_moment_sum, _0_moment_sum]
     case hX =>
       intro i k
-      exact (hX i.castSucc k.castSucc.castSucc)
+      exact hX i.castSucc k.castSucc.castSucc
     case hXIndep => exact iIndepFun_succ hXIndep
-    rewrite [_1_moment_sum]
     case hX =>
       intro i k
       exact (hX i.castSucc k.castSucc)
     case hXIndep => exact iIndepFun_succ hXIndep
+    case hXIdent =>
+      intro i j
+      exact hXIdent i.castSucc j.castSucc
 
     rewrite [zero_moment_eq_one, mul_one, one_mul]
-    case hXIdent => sorry
-    -- rewrite [add_right_inj]
-    sorry
+    rewrite [moment_eq_if_identdistrib (hXIdent (Fin.last n).castSucc (Fin.last (n + 1)))]
+    rewrite [moment_eq_if_identdistrib (hXIdent (Fin.last n).castSucc (Fin.last (n + 1)))]
+    linarith
