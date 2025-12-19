@@ -206,7 +206,8 @@ theorem _2_moment_sum
   (hXIndep : iIndepFun X P)
   (hXIdent : (i j : Fin (n + 1)) → IdentDistrib (X i) (X j) P P)
   : moment (∑ i, X i) 2 P
-    = (n + 1) * moment (X (Fin.last n)) 2 P + (n + 1) * n * (moment (X (Fin.last n)) 1 P) ^ 2
+    = (n + 1) * moment (X (Fin.last n)) 2 P
+    + (n + 1) * n * moment (X (Fin.last n)) 1 P ^ 2
   := by
   induction n
   case zero =>
@@ -245,6 +246,70 @@ theorem _2_moment_sum
       exact hXIdent i.castSucc j.castSucc
 
     rewrite [zero_moment_eq_one, mul_one, one_mul]
+    rewrite [moment_eq_if_identdistrib (hXIdent (Fin.last n).castSucc (Fin.last (n + 1)))]
+    rewrite [moment_eq_if_identdistrib (hXIdent (Fin.last n).castSucc (Fin.last (n + 1)))]
+    linarith
+
+theorem _3_moment_sum
+  {Ω : Type u_1} [m : MeasurableSpace Ω]
+  {P : Measure Ω} [mP : IsProbabilityMeasure P]
+  {n : ℕ}
+  {X : Fin (n + 1) → Ω → ℝ}
+  (hX : ∀ i, ∀ k : Fin 4, MemLp (X i) k P)
+  (hXIndep : iIndepFun X P)
+  (hXIdent : (i j : Fin (n + 1)) → IdentDistrib (X i) (X j) P P)
+  : moment (∑ i, X i) 3 P
+    = (n + 1) * moment (X (Fin.last n)) 3 P
+    + 3 * (n + 1) * n * (moment (X (Fin.last n)) 2 P) * (moment (X (Fin.last n)) 1 P)
+    + 1 * (n + 1) * n * (n - 1) * (moment (X (Fin.last n)) 1 P ^ 3)
+  := by
+  induction n
+  case zero =>
+    simp
+  case succ n hn =>
+    have hn2 := by
+      apply hn
+      case hX =>
+        intro i
+        exact hX i.castSucc
+      case hXIndep => exact iIndepFun_succ hXIndep
+      case hXIdent =>
+        intro i j
+        exact hXIdent i.castSucc j.castSucc
+    rewrite [k_moment_sum_recursive X ?hX hXIndep]
+    case hX =>
+      intro i
+      exact (hX i 3)
+    rewrite [Finset.sum_range, Fin.sum_univ_castSucc, Fin.sum_univ_castSucc, Fin.sum_univ_castSucc]
+    simp only [univ_unique, Fin.default_eq_zero, Fin.isValue, Nat.reduceAdd, Fin.coe_castSucc,
+      Fin.val_eq_zero, Nat.choose_zero_right, Nat.cast_one, tsub_zero, one_mul, sum_const,
+      card_singleton, one_smul, Fin.reduceLast, Fin.castSucc_one, Fin.coe_ofNat_eq_mod, Nat.one_mod,
+      Nat.choose_one_right, Nat.cast_ofNat, Nat.add_one_sub_one, Fin.reduceCastSucc, Nat.reduceMod,
+      Nat.choose_succ_self_right, Nat.reduceSub, Nat.mod_succ, Nat.choose_self, tsub_self,
+      Nat.cast_add, add_sub_cancel_right]
+
+    rewrite [hn2, _2_moment_sum, _1_moment_sum, _0_moment_sum]
+    case hX =>
+      intro i k
+      exact hX i.castSucc k.castSucc.castSucc.castSucc
+    case hXIndep => exact iIndepFun_succ hXIndep
+    case hXIdent =>
+      intro i j
+      exact hXIdent i.castSucc j.castSucc
+    case hX =>
+      intro i k
+      exact hX i.castSucc k.castSucc.castSucc
+    case hXIndep => exact iIndepFun_succ hXIndep
+    case hX =>
+      intro i k
+      exact hX i.castSucc k.castSucc
+    case hXIndep => exact iIndepFun_succ hXIndep
+    case hXIdent =>
+      intro i j
+      exact hXIdent i.castSucc j.castSucc
+
+    rewrite [zero_moment_eq_one, mul_one, one_mul]
+    rewrite [moment_eq_if_identdistrib (hXIdent (Fin.last n).castSucc (Fin.last (n + 1)))]
     rewrite [moment_eq_if_identdistrib (hXIdent (Fin.last n).castSucc (Fin.last (n + 1)))]
     rewrite [moment_eq_if_identdistrib (hXIdent (Fin.last n).castSucc (Fin.last (n + 1)))]
     linarith
