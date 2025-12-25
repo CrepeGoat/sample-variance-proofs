@@ -62,4 +62,52 @@ theorem biased_svar_eq_smean_sq_add_sq_smean
     rw [mul_left_inj' h2]
     simp_all only [ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, pow_eq_zero_iff, div_self]
 
+noncomputable def bias
+  {Ω : Type u_2} [MeasurableSpace Ω]
+  (X : Ω → ℝ)
+  (θ : ℝ)
+  (P : Measure Ω) [IsFiniteMeasure P]
+  : ℝ := P[fun ω : Ω => X ω - θ]
+
+theorem bias'
+  {Ω : Type u_2} [MeasurableSpace Ω]
+  {X : Ω → ℝ}
+  {θ : ℝ}
+  {P : Measure Ω} [IsProbabilityMeasure P]
+  (hXIntegrable : Integrable X P)
+  : bias X θ P = P[X] - θ
+  := by
+  unfold bias
+  simp only
+  rw [integral_sub hXIntegrable (by simp), integral_const, smul_eq_mul, sub_right_inj,
+    measureReal_univ_eq_one, one_mul]
+
+theorem bias_svar_var
+  {Ω : Type u_1} [m : MeasurableSpace Ω]
+  {P : Measure Ω} [IsProbabilityMeasure P]
+  {n k : ℕ}
+  (X : Fin (n + 1) → Ω → ℝ)
+  : bias (fun ω => biased_svar (fun i => X i ω)) (variance (X (Fin.last n)) P) P = -1 / (n + 1)
+  := by
+  rw [bias']
+  conv =>
+  lhs
+  congr
+  · congr
+    · skip
+    · simp only
+      -- rw [biased_svar_eq_smean_sq_add_sq_smean]
+
+  unfold biased_svar smean
+  simp only
+
+  sorry
+
+noncomputable def mse
+  {Ω : Type u_2} [MeasurableSpace Ω]
+  (X : Ω → ℝ)
+  (θ : ℝ)
+  (P : Measure Ω) [IsFiniteMeasure P]
+  : ℝ := variance X P + (bias X θ P) ^ 2
+
 -- ProbabilityTheory.variance_eq_sub
