@@ -26,13 +26,11 @@ theorem biased_svar_eq_smean_sq_add_sq_smean
   (X : Fin (n + 1) → ℝ)
   : biased_svar X = smean (fun i => X i ^ 2) - smean X ^ 2
   := by
-  unfold biased_svar smean
-  simp only
-
   have h : @Nat.cast ℝ Real.instNatCast (n + 1) ≠ 0 := by
     rw [Nat.cast_ne_zero, ne_eq, Nat.add_eq_zero]
     simp only [one_ne_zero, and_false, not_false_eq_true]
 
+  unfold biased_svar smean
   rw [div_eq_iff h]
   rw [sub_mul, div_mul_comm]
   nth_rw 2 [(div_eq_one_iff_eq h).mpr (by rfl)]
@@ -69,7 +67,7 @@ noncomputable def bias
   (P : Measure Ω) [IsFiniteMeasure P]
   : ℝ := P[fun ω : Ω => X ω - θ]
 
-theorem bias'
+theorem bias_eq_sub
   {Ω : Type u_2} [MeasurableSpace Ω]
   {X : Ω → ℝ}
   {θ : ℝ}
@@ -82,26 +80,40 @@ theorem bias'
   rw [integral_sub hXIntegrable (by simp), integral_const, smul_eq_mul, sub_right_inj,
     measureReal_univ_eq_one, one_mul]
 
-theorem bias_svar_var
-  {Ω : Type u_1} [m : MeasurableSpace Ω]
-  {P : Measure Ω} [IsProbabilityMeasure P]
-  {n k : ℕ}
-  (X : Fin (n + 1) → Ω → ℝ)
-  : bias (fun ω => biased_svar (fun i => X i ω)) (variance (X (Fin.last n)) P) P = -1 / (n + 1)
-  := by
-  rw [bias']
-  conv =>
-  lhs
-  congr
-  · congr
-    · skip
-    · simp only
-      -- rw [biased_svar_eq_smean_sq_add_sq_smean]
+-- theorem bias_svar_var
+--   {Ω : Type u_1} [m : MeasurableSpace Ω]
+--   {P : Measure Ω} [IsProbabilityMeasure P]
+--   {n k : ℕ}
+--   (X : Fin (n + 1) → Ω → ℝ)
+--   : bias (fun ω => biased_svar (fun i => X i ω)) (variance (X (Fin.last n)) P) P
+--     = (-1 / (n + 1)) * (variance (X (Fin.last n)) P)
+--   := by
+--   have h : @Nat.cast ℝ Real.instNatCast (n + 1) ≠ 0 := by
+--     rw [Nat.cast_ne_zero, ne_eq, Nat.add_eq_zero]
+--     simp only [one_ne_zero, and_false, not_false_eq_true]
 
-  unfold biased_svar smean
-  simp only
+--   rw [bias_eq_sub ?hSvarIntegrable]
+--   case hSvarIntegrable =>
+--     sorry
+--   conv =>
+--     lhs
+--     congr
+--     · congr
+--       · skip
+--       · ext ω
+--         rw [biased_svar_eq_smean_sq_add_sq_smean]
+--     · skip
 
-  sorry
+--   rw [sub_eq_iff_eq_add', neg_div, neg_mul, <- sub_eq_add_neg]
+--   nth_rw 1 [<- one_mul (@variance Ω m (X (Fin.last n)) P)]
+--   rw [<- sub_mul, sub_div' (by simp_all only [Nat.cast_add, Nat.cast_one, ne_eq, not_false_eq_true]), one_mul, add_sub_cancel_right]
+
+
+--   unfold smean
+--   simp only
+--   rw [integral_sub, integral_div]
+--   rw [moment_def]
+--   sorry
 
 noncomputable def mse
   {Ω : Type u_2} [MeasurableSpace Ω]
