@@ -123,3 +123,99 @@ noncomputable def mse
   : ℝ := variance X P + (bias X θ P) ^ 2
 
 -- ProbabilityTheory.variance_eq_sub
+
+theorem mse_eq
+  {Ω : Type u_1} [m : MeasurableSpace Ω]
+  {X : Ω → ℝ}
+  {P : Measure Ω} [IsProbabilityMeasure P]
+  (hXIntegrable : Integrable X P)
+  (hXm2 : MemLp X 2 P)
+  (θ : ℝ)
+  : mse X θ P = P[X ^ 2] - 2 * P[X] * θ + θ ^ 2
+  := by
+  unfold mse
+  rw [bias_eq_sub hXIntegrable, sub_sq, sub_add, add_sub, sub_add, sub_left_inj]
+  rw [<- sub_eq_iff_eq_add.mp]
+  rw [variance_eq_sub hXm2]
+
+
+theorem mse_scaled_svar_var
+  {Ω : Type u_1} [m : MeasurableSpace Ω]
+  {X : Fin (n + 1) → Ω → ℝ}
+  {P : Measure Ω} [IsProbabilityMeasure P]
+  (hXIntegrable : (i : Fin (n + 1)) → Integrable (X i) P)
+  (hXm2 : (i : Fin (n + 1)) → MemLp (X i) 2 P)
+  (θ : ℝ)
+  (k : ℝ)
+  : mse (fun ω => k * biased_svar (fun i => X i ω)) (variance (X (Fin.last n)) P) P
+    =
+      -- P[X (Fin.last n) ^ 2] - P[X (Fin.last n)] ^ 2
+      P[X (Fin.last n) ^ 2] ^ 2
+      - 2 * P[X (Fin.last n) ^ 2] * P[X (Fin.last n)] ^ 2
+      + P[X (Fin.last n)] ^ 4
+  := by
+  rw [mse_eq]
+  case hXIntegrable =>
+    unfold biased_svar
+    simp only [Nat.cast_add, Nat.cast_one]
+    sorry
+    -- rw [integrable_mul_const_iff]
+  case hXm2 =>
+    sorry
+
+  conv =>
+    lhs
+    congr
+    · congr
+      · congr
+        · skip
+        · simp only [Pi.pow_apply]
+          ext ω
+          rw [mul_pow]
+          congr
+          · skip
+          · congr
+            · rw [biased_svar_eq_smean_sq_add_sq_smean]
+              unfold smean
+            · skip
+      · congr
+        · congr
+          · skip
+          · congr
+            · skip
+            · ext ω
+              rw [biased_svar_eq_smean_sq_add_sq_smean]
+              unfold smean
+        · skip
+    · skip
+
+  simp only
+  conv =>
+    lhs
+    congr
+    · congr
+      · congr
+        · skip
+        · ext ω
+          rw [mul_comm, sub_sq]
+      · congr
+        · congr
+          · skip
+          · congr
+            · skip
+            · ext ω
+              rw [mul_comm]
+        · skip
+    · skip
+
+  rw [integral_mul_const, mul_comm]
+  rw [variance_eq_sub, sub_sq, <- pow_mul]
+  nth_rw 2 [sub_add]
+  rw [add_sub, <- sub_add]
+  rw [add_left_inj, sub_left_inj, add_eq_right]
+
+  conv =>
+    lhs
+    rw [<- moment]
+
+  sorry
