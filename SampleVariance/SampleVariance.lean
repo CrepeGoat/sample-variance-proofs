@@ -8,6 +8,8 @@ import Mathlib.Probability.Moments.Basic
 import Mathlib.MeasureTheory.Function.L1Space.Integrable
 import Mathlib.Data.Finset.Range
 
+import SampleVariance.MomentsOfSums
+
 open Finset MeasureTheory ProbabilityTheory NNReal
 open scoped ENNReal
 
@@ -128,8 +130,8 @@ theorem mse_eq
   {Ω : Type u_1} [m : MeasurableSpace Ω]
   {X : Ω → ℝ}
   {P : Measure Ω} [IsProbabilityMeasure P]
-  (hXIntegrable : Integrable X P)
   (hXm2 : MemLp X 2 P)
+  (hXIntegrable : Integrable X P)
   (θ : ℝ)
   : mse X θ P = P[X ^ 2] - 2 * P[X] * θ + θ ^ 2
   := by
@@ -143,8 +145,8 @@ theorem mse_scaled_svar_var
   {Ω : Type u_1} [m : MeasurableSpace Ω]
   {X : Fin (n + 1) → Ω → ℝ}
   {P : Measure Ω} [IsProbabilityMeasure P]
+  (hX : ∀ i, ∀ k : Fin 3, MemLp (X i) k P)
   (hXIntegrable : (i : Fin (n + 1)) → Integrable (X i) P)
-  (hXm2 : (i : Fin (n + 1)) → MemLp (X i) 2 P)
   (θ : ℝ)
   (k : ℝ)
   : mse (fun ω => k * biased_svar (fun i => X i ω)) (variance (X (Fin.last n)) P) P
@@ -213,9 +215,92 @@ theorem mse_scaled_svar_var
   nth_rw 2 [sub_add]
   rw [add_sub, <- sub_add]
   rw [add_left_inj, sub_left_inj, add_eq_right]
+  rw [integral_add, integral_sub, integral_mul_const, integral_sub, integral_div]
 
   conv =>
     lhs
-    rw [<- moment]
+    congr
+    · congr
+      · skip
+      · congr
+        · congr
+          · congr
+            · skip
+            · ext ω
+              rw [div_pow]
+          · congr
+            · skip
+            · ext ω
+              rw [div_pow, mul_assoc, div_mul_div_comm, <- pow_succ' (@Nat.cast ℝ Real.instNatCast (n + 1))]
+              simp only [Nat.reduceAdd]
+              rw [mul_div, mul_comm, <- mul_div]
+        · congr
+          · skip
+          · ext ω
+            rw [div_pow, div_pow, <- pow_mul, <- pow_mul]
+            simp only [Nat.reduceMul]
+    · congr
+      · congr
+        · skip
+        · congr
+          · congr
+            · skip
+            · congr
+              · skip
+              · ext ω
+                rw [div_pow]
+          · skip
+      · skip
+  simp only [Pi.pow_apply]
+  rw [integral_div, integral_div, integral_div, integral_mul_const]
+  -- rw [<- Pi.pow_apply]
+  conv =>
+    lhs
+    congr
+    · congr
+      · skip
+      · congr
+        · congr
+          · congr
+            · calc
+              ∫ (a : Ω), (∑ x, X x a ^ 2) ^ 2 ∂P
+                = ∫ (ω : Ω), ((∑ i, (X i) ^ 2) ^ 2) ω ∂P
+              := by simp only [Pi.pow_apply, sum_apply]
+              _ = moment (∑ i, (fun j => (X j) ^ 2) i) 2 P
+              := by rw [moment_def]
+              _ = (n + 1) * moment (X (Fin.last n) ^ 2) 2 P
+                + (n + 1) * n * moment (X (Fin.last n) ^ 2) 1 P ^ 2
+              := by
+                rw [_2_moment_sum hX]
 
+                sorry
+              _ = (n + 1) * moment (X (Fin.last n)) 4 P
+                + (n + 1) * n * moment (X (Fin.last n)) 2 P ^ 2
+              := by sorry
+              -- rw [] -- _2_moment_sum
+            · skip
+          · congr
+            · skip -- TODO
+            · skip
+        · congr
+          · rw []
+          · skip
+    · congr
+      · congr
+        · skip
+        · congr
+          · congr
+            · congr
+              · rw [] -- _2_moment_sum
+              · skip
+            · congr
+              · rw [] -- _2_moment_sum
+              · skip
+          · skip
+      · congr
+        · skip
+        · skip
+
+
+  rw [<- moment_def]
   sorry

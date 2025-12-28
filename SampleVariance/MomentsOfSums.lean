@@ -139,7 +139,7 @@ theorem _0_moment_sum
   {P : Measure Ω} [IsProbabilityMeasure P]
   {n : ℕ}
   {X : Fin (n + 1) → Ω → ℝ}
-  (hX : ∀ i, ∀ k : Fin 1, MemLp (X i) k P)
+  (hX : ∀ i, MemLp (X i) 0 P)
   (hXIndep : iIndepFun X P)
   -- (hXIdent : (i : Fin n.succ) → (j : Fin n.succ) → IdentDistrib (X i) (X j) μ)
   : moment (∑ i, X i) 0 P
@@ -154,7 +154,7 @@ theorem _1_moment_sum
   {P : Measure Ω} [mP : IsProbabilityMeasure P]
   {n : ℕ}
   {X : Fin (n + 1) → Ω → ℝ}
-  (hX : ∀ i, ∀ k : Fin 2, MemLp (X i) k P)
+  (hX : ∀ i, MemLp (X i) 1 P)
   (hXIndep : iIndepFun X P)
   (hXIdent : (i : Fin (n + 1)) → (j : Fin (n + 1)) → IdentDistrib (X i) (X j) P P)
   : moment (∑ i, X i) 1 P
@@ -169,7 +169,8 @@ theorem _1_moment_sum
     rewrite [k_moment_sum_recursive X ?hX hXIndep]
     case hX =>
       intro i
-      exact (hX i 1)
+      apply MemLp.mono_exponent (hX i)
+      simp only [Nat.cast_one, le_refl]
     simp only [Nat.reduceAdd]
     rewrite [Finset.sum_range, Fin.sum_univ_castSucc]
     simp only [univ_unique, Fin.default_eq_zero, Fin.isValue, Fin.coe_castSucc, Fin.val_eq_zero,
@@ -179,8 +180,9 @@ theorem _1_moment_sum
 
     rewrite [_0_moment_sum]
     case hX =>
-      intro i k
-      exact (hX i.castSucc k.castSucc)
+      intro i
+      apply MemLp.mono_exponent (hX i.castSucc)
+      simp only [zero_le]
     case hXIndep => exact iIndepFun_succ hXIndep
 
     rewrite [zero_moment_eq_one, mul_one, one_mul]
@@ -202,7 +204,7 @@ theorem _2_moment_sum
   {P : Measure Ω} [mP : IsProbabilityMeasure P]
   {n : ℕ}
   {X : Fin (n + 1) → Ω → ℝ}
-  (hX : ∀ i, ∀ k : Fin 3, MemLp (X i) k P)
+  (hX : ∀ i, MemLp (X i) 2 P)
   (hXIndep : iIndepFun X P)
   (hXIdent : (i j : Fin (n + 1)) → IdentDistrib (X i) (X j) P P)
   : moment (∑ i, X i) 2 P
@@ -226,7 +228,8 @@ theorem _2_moment_sum
     rewrite [k_moment_sum_recursive X ?hX hXIndep]
     case hX =>
       intro i
-      exact (hX i 2)
+      apply MemLp.mono_exponent (hX i)
+      simp only [Nat.cast_ofNat, le_refl]
     rewrite [Finset.sum_range, Fin.sum_univ_castSucc]
     simp only [Nat.reduceAdd, Fin.coe_castSucc, Fin.sum_univ_two, Fin.isValue, Fin.coe_ofNat_eq_mod,
       Nat.zero_mod, Nat.choose_zero_right, Nat.cast_one, tsub_zero, one_mul, Nat.mod_succ,
@@ -234,12 +237,14 @@ theorem _2_moment_sum
       Nat.choose_self, tsub_self, Nat.cast_add]
     rewrite [hn2, _1_moment_sum, _0_moment_sum]
     case hX =>
-      intro i k
-      exact hX i.castSucc k.castSucc.castSucc
+      intro i
+      apply MemLp.mono_exponent (hX i.castSucc)
+      simp only [zero_le]
     case hXIndep => exact iIndepFun_succ hXIndep
     case hX =>
-      intro i k
-      exact (hX i.castSucc k.castSucc)
+      intro i
+      apply MemLp.mono_exponent (hX i.castSucc)
+      simp only [Nat.one_le_ofNat]
     case hXIndep => exact iIndepFun_succ hXIndep
     case hXIdent =>
       intro i j
@@ -255,7 +260,7 @@ theorem _3_moment_sum
   {P : Measure Ω} [mP : IsProbabilityMeasure P]
   {n : ℕ}
   {X : Fin (n + 1) → Ω → ℝ}
-  (hX : ∀ i, ∀ k : Fin 4, MemLp (X i) k P)
+  (hX : ∀ i, MemLp (X i) 3 P)
   (hXIndep : iIndepFun X P)
   (hXIdent : (i j : Fin (n + 1)) → IdentDistrib (X i) (X j) P P)
   : moment (∑ i, X i) 3 P
@@ -281,7 +286,8 @@ theorem _3_moment_sum
     rewrite [k_moment_sum_recursive X ?hX hXIndep]
     case hX =>
       intro i
-      exact (hX i 3)
+      apply MemLp.mono_exponent (hX i)
+      simp only [Nat.cast_ofNat, le_refl]
     rewrite [Finset.sum_range, Fin.sum_univ_castSucc, Fin.sum_univ_castSucc, Fin.sum_univ_castSucc]
     simp only [univ_unique, Fin.default_eq_zero, Fin.isValue, Nat.reduceAdd, Fin.coe_castSucc,
       Fin.val_eq_zero, Nat.choose_zero_right, Nat.cast_one, tsub_zero, one_mul, sum_const,
@@ -292,19 +298,23 @@ theorem _3_moment_sum
 
     rewrite [hn2, _2_moment_sum, _1_moment_sum, _0_moment_sum]
     case hX =>
-      intro i k
-      exact hX i.castSucc k.castSucc.castSucc.castSucc
+      intro i
+      apply MemLp.mono_exponent (hX i.castSucc)
+      simp only [zero_le]
     case hXIndep => exact iIndepFun_succ hXIndep
     case hXIdent =>
       intro i j
       exact hXIdent i.castSucc j.castSucc
     case hX =>
-      intro i k
-      exact hX i.castSucc k.castSucc.castSucc
+      intro i
+      apply MemLp.mono_exponent (hX i.castSucc)
+      simp only [Nat.one_le_ofNat]
     case hXIndep => exact iIndepFun_succ hXIndep
     case hX =>
-      intro i k
-      exact hX i.castSucc k.castSucc
+      intro i
+      apply MemLp.mono_exponent (hX i.castSucc)
+      rw [Nat.ofNat_le]
+      simp only [Nat.reduceLeDiff]
     case hXIndep => exact iIndepFun_succ hXIndep
     case hXIdent =>
       intro i j
@@ -321,7 +331,7 @@ theorem _4_moment_sum
   {P : Measure Ω} [mP : IsProbabilityMeasure P]
   {n : ℕ}
   {X : Fin (n + 1) → Ω → ℝ}
-  (hX : ∀ i, ∀ k : Fin 5, MemLp (X i) k P)
+  (hX : ∀ i, MemLp (X i) 4 P)
   (hXIndep : iIndepFun X P)
   (hXIdent : (i j : Fin (n + 1)) → IdentDistrib (X i) (X j) P P)
   : moment (∑ i, X i) 4 P
@@ -350,7 +360,8 @@ theorem _4_moment_sum
     rewrite [k_moment_sum_recursive X ?hX hXIndep]
     case hX =>
       intro i
-      exact (hX i 4)
+      apply MemLp.mono_exponent (hX i)
+      simp only [Nat.cast_ofNat, le_refl]
     rewrite [Finset.sum_range, Fin.sum_univ_castSucc, Fin.sum_univ_castSucc, Fin.sum_univ_castSucc,
       Fin.sum_univ_castSucc]
     simp only [univ_unique, Fin.default_eq_zero, Fin.isValue, Nat.reduceAdd, Fin.coe_castSucc,
@@ -362,26 +373,32 @@ theorem _4_moment_sum
 
     rewrite [hn2, _3_moment_sum, _2_moment_sum, _1_moment_sum, _0_moment_sum]
     case hX =>
-      intro i k
-      exact hX i.castSucc k.castSucc.castSucc.castSucc.castSucc
+      intro i
+      apply MemLp.mono_exponent (hX i.castSucc)
+      simp only [zero_le]
     case hXIndep => exact iIndepFun_succ hXIndep
     case hXIdent =>
       intro i j
       exact hXIdent i.castSucc j.castSucc
     case hX =>
-      intro i k
-      exact hX i.castSucc k.castSucc.castSucc.castSucc
+      intro i
+      apply MemLp.mono_exponent (hX i.castSucc)
+      simp only [Nat.one_le_ofNat]
     case hXIndep => exact iIndepFun_succ hXIndep
     case hXIdent =>
       intro i j
       exact hXIdent i.castSucc j.castSucc
     case hX =>
-      intro i k
-      exact hX i.castSucc k.castSucc.castSucc
+      intro i
+      apply MemLp.mono_exponent (hX i.castSucc)
+      rw [Nat.ofNat_le]
+      simp only [Nat.reduceLeDiff]
     case hXIndep => exact iIndepFun_succ hXIndep
     case hX =>
-      intro i k
-      exact hX i.castSucc k.castSucc
+      intro i
+      apply MemLp.mono_exponent (hX i.castSucc)
+      rw [Nat.ofNat_le]
+      simp only [Nat.reduceLeDiff]
     case hXIndep => exact iIndepFun_succ hXIndep
     case hXIdent =>
       intro i j
