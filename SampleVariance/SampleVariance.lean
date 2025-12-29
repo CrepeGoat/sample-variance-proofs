@@ -386,7 +386,26 @@ theorem mse_scaled_svar_var
   simp_rw [<- hXi]
 
   simp only [one_mul]
-
+  conv in (((↑n + 1) * moment Xi 4 P + (↑n + 1) * ↑n * moment Xi 2 P ^ 2) / (↑n + 1) ^ 2) => rw [add_div]
+  conv in ((↑n + 1) * moment Xi 4 P / (↑n + 1) ^ 2) => rw [mul_comm, <- mul_div]
+  nth_rw 1 [<- pow_one (@HAdd.hAdd ℝ ℝ ℝ instHAdd (↑n) 1)]
+  -- rw [div_eq_mul_inv]
+  conv in ((↑n + 1) ^ 1 / (↑n + 1) ^ 2) => calc
+    (@HDiv.hDiv ℝ ℝ ℝ instHDiv ((↑n + 1) ^ 1) ((↑n + 1) ^ 2))
+      = ((n + 1) ^ 0 / (n + 1) ^ 1)
+    := by
+      rw [div_eq_div_iff]
+      case hb =>
+        rw [ne_eq, sq_eq_zero_iff, <- Nat.cast_one, <- Nat.cast_add, Nat.cast_eq_zero]
+        rw [<- Nat.succ_eq_add_one, <- ne_eq]
+        apply Nat.succ_ne_zero
+      case hd =>
+        rw [ne_eq, pow_one, <- Nat.cast_one, <- Nat.cast_add, Nat.cast_eq_zero]
+        rw [<- Nat.succ_eq_add_one, <- ne_eq]
+        apply Nat.succ_ne_zero
+      linarith only []
+    _ = (1 / (n + 1))
+    := by simp only [pow_zero, pow_one, one_div]
 
   -- simp_rw [mul_add, add_mul, mul_sub, sub_mul, add_div, one_mul]
   -- simp_rw [mul_add, add_mul, mul_sub, sub_mul]
