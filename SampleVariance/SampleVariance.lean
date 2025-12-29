@@ -14,14 +14,16 @@ open Finset MeasureTheory ProbabilityTheory NNReal
 open scoped ENNReal
 
 noncomputable def smean
+  {R : Type u_1} [Field R]
   {n : ℕ}
-  (X : Fin n → ℝ)
-  : ℝ := (∑ i : Fin n, X i) / n
+  (X : Fin n → R)
+  : R := (∑ i : Fin n, X i) / n
 
 noncomputable def biased_svar
+  {R : Type u_1} [Field R]
   {n : ℕ}
-  (X : Fin n → ℝ)
-  : ℝ := (∑ i : Fin n, ((X i - smean X) ^ 2)) / n
+  (X : Fin n → R)
+  : R := (∑ i : Fin n, ((X i - smean X) ^ 2)) / n
 
 theorem biased_svar_eq_smean_sq_add_sq_smean
   {n : ℕ}
@@ -143,6 +145,7 @@ theorem mse_eq
 
 theorem mse_scaled_svar_var
   {Ω : Type u_1} [m : MeasurableSpace Ω]
+  {n : ℕ}
   {X : Fin (n + 1) → Ω → ℝ}
   {P : Measure Ω} [IsProbabilityMeasure P]
   (hX : ∀ i, MemLp (X i) 4 P)
@@ -154,7 +157,7 @@ theorem mse_scaled_svar_var
     =
       k ^ 2 * (
         (1 / (↑n + 1)) * moment (X (Fin.last n)) 4 P
-        + ↑n * moment (X (Fin.last n)) 2 P ^ 2 / (↑n + 1)
+        + (↑n / (↑n + 1)) * moment (X (Fin.last n)) 2 P ^ 2
         - (2 / (↑n + 1) ^ 3) * (∫ (a : Ω), (∑ x, X x a ^ 2) * (∑ x, X x a) ^ 2 ∂P)
         + (
           moment (X (Fin.last n)) 4 P
@@ -165,10 +168,9 @@ theorem mse_scaled_svar_var
         ) / (↑n + 1) ^ 3
       )
       - (2 * k * (↑n / (↑n + 1)) + 1) * (
-        moment (X (Fin.last n)) 2 P ^ 2
-        - 2 * moment (X (Fin.last n)) 2 P * moment (X (Fin.last n)) 1 P ^ 2
-        + moment (X (Fin.last n)) 1 P ^ 4
-      )
+        moment (X (Fin.last n)) 2 P
+        - moment (X (Fin.last n)) 1 P ^ 2
+      ) ^ 2
   := by
   rw [mse_eq]
   case hXIntegrable =>

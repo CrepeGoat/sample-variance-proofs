@@ -8,6 +8,119 @@ import Mathlib.Algebra.BigOperators.Fin
 
 open Finset BigOperators
 
+theorem sum_sq_eq
+  {R : Type u_1} [Field R]
+  {n : ℕ}
+  {f : Fin n → R}
+  : (∑ i, f i) ^ 2 = ∑ i, (f i) ^ 2 + ∑ i, ∑ j ∈ Finset.univ.erase i, f i * f j
+  := by
+  rw [sq, sum_mul]
+  conv in (fun i => @HMul.hMul R R R instHMul (f i) (∑ i, f i)) =>
+    intro i
+    rw [mul_sum]
+
+  simp only [mem_univ, sum_erase_eq_sub, sum_sub_distrib]
+  conv in (fun i => f i * f i) => intro i; rw [<- sq]
+  rw [add_sub, add_comm, <- add_sub, sub_self, add_zero]
+
+theorem sum2_ne_symm
+  {R1 : Type u_1}
+  {R2 : Type u_2} [AddCommMonoid R2]
+  {n : ℕ}
+  (s : Finset (Fin n))
+  (f g : Fin n → R1)
+  (h : R1 → R1 → R2)
+  : ∑ i ∈ s, ∑ j ∈ s.erase i, h (f i) (g j) = ∑ i ∈ s, ∑ j ∈ s.erase i, h (g i) (f j)
+  := by
+  sorry
+
+theorem sum_sq_mul_sq_sum
+  {R : Type u_1} [Field R]
+  {n : ℕ}
+  {f : Fin n → R}
+  : (∑ i, f i ^ 2) * (∑ i, f i) ^ 2
+    = (∑ i, f i ^ 2) ^ 2
+    + ∑ i1, ∑ i2 ∈ univ.erase i1, ∑ i3 ∈ (univ.erase i1).erase i2, f i1 * f i2 * f i3 ^ 2
+    + 2 * ∑ i1, ∑ i2 ∈ univ.erase i1, f i1 * f i2 ^ 3
+  := by
+  rw [sum_sq_eq, mul_add, <- sq, add_assoc, add_right_inj]
+  rw [mul_sum]
+  conv =>
+    enter [1, 2, i1]
+    rw [<- mul_sum, <- mul_assoc]
+  conv =>
+    enter [1, 2, i1, 1]
+    rw [mul_comm]
+  conv =>
+    enter [1, 2, i1]
+    rw [mul_assoc]
+
+  conv =>
+    enter [1, 2, i1]
+    rw [<- sum_erase_add Finset.univ (fun i => f i ^ 2) (by exact mem_univ i1)]
+    rw [mul_comm, mul_assoc, add_mul, <- mul_assoc, <- mul_assoc]
+  rw [sum_add_distrib]
+  conv =>
+    enter [1, 2, 2, i1]
+    rw [mul_comm, <- mul_assoc, <- pow_succ']
+    simp only [Nat.reduceAdd]
+  rw [two_mul, <- add_assoc]
+  conv =>
+    enter [1, 2, 2, i1]
+    rw [mul_sum]
+  conv =>
+    enter [1, 2]
+    rw [sum2_ne_symm]
+  rw [add_left_inj]
+
+  conv =>
+    enter [1, 2, i1]
+    rw [mul_comm]
+  conv =>
+    enter [1, 2, i1, 2]
+    rw [mul_comm, sum_mul]
+
+  conv =>
+    enter [1, 2, i1, 2, 2, i2, 2]
+    rw [<- sum_erase_add (univ.erase i1) (fun i => f i ^ 2) (by
+      simp only [mem_erase, ne_eq, mem_univ, and_true]
+      sorry
+      )]
+
+
+  -- conv =>
+  --   enter [1, 2, i1, 2, 2, i2]
+  --   rw [<- mul_sum]
+  -- conv =>
+  --   enter [1, 2, i1, 2, 2, i2, 2]
+  --   apply sum_erase_eq_sub (by simp only [mem_univ])
+  -- conv =>
+  --   enter [1, 2, i1, 2, 2, i2]
+  --   rw [mul_sub, <- sq]
+  -- rw [sum_sub_distrib]
+  -- conv =>
+  --   enter [1, 2, i1, 2, 1]
+  --   rw [<- sum_mul, <- sq]
+  -- conv =>
+  --   enter [1, 2, i1]
+  --   rw [mul_sub]
+  -- rw [sum_sub_distrib, <- sum_mul, <- sum_mul, <- mul_sub]
+
+  -- rw [<- sum_erase_eq_sub]
+
+  -- conv in (fun i => f i ^ 2 * ∑ i1, _) =>
+  --   intro i
+  --   rw [sq, mul_assoc, mul_sum]
+  -- conv =>
+  --   enter [1, 2, i, 2, 2, i1]
+  --   rw [mul_sum]
+  -- conv =>
+  --   enter [1, 2, i, 2, 2, i1, 2, i]
+  --   rw [<- mul_assoc]
+
+
+  sorry
+
 
 theorem pow_sum_castSucc_eq_sum_add_pow
   {R : Type u_1} [CommSemiring R]
