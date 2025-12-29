@@ -152,9 +152,27 @@ theorem mse_scaled_svar_var
   (k : ℝ)
   : mse (fun ω => k * biased_svar (fun i => X i ω)) (variance (X (Fin.last n)) P) P
     =
-      -- k ^ 2 / (n + 1) * moment (X (Fin.last n)) 4 P
-      -- + (k ^ 2 * n ^ 2) / (n + 1) ^ 2 * moment (X (Fin.last n)) 2 P ^ 2
-      P[X (Fin.last n) ^ 2] ^ 2
+      k ^ 2 * (
+        moment (X (Fin.last n)) 4 P * (1 / (↑n + 1))
+        + (↑n + 1) * ↑n * moment (X (Fin.last n)) 2 P ^ 2 / (↑n + 1) ^ 2
+        - (∫ (a : Ω), (∑ x, X x a ^ 2) * (∑ x, X x a) ^ 2 ∂P) * (2 / (↑n + 1) ^ 3)
+        + (
+          (↑n + 1) * moment (X (Fin.last n)) 4 P + 3 * (↑n + 1) * ↑n * moment (X (Fin.last n)) 2 P ^ 2
+          + 4 * (↑n + 1) * ↑n * moment (X (Fin.last n)) 3 P * moment (X (Fin.last n)) 1 P
+          + 6 * (↑n + 1) * ↑n * (↑n - 1) * moment (X (Fin.last n)) 2 P * moment (X (Fin.last n)) 1 P ^ 2
+          + (↑n + 1) * ↑n * (↑n - 1) * (↑n - 2) * moment (X (Fin.last n)) 1 P ^ 4
+        ) / (↑n + 1) ^ 4
+      )
+      - 2 * (
+        (
+          (↑n + 1) * moment (X (Fin.last n)) 2 P / (↑n + 1)
+          - (
+            (↑n + 1) * moment (X (Fin.last n)) 2 P
+            + (↑n + 1) * ↑n * moment (X (Fin.last n)) 1 P ^ 2
+          ) / (↑n + 1) ^ 2
+        ) * k
+      ) * (moment (X (Fin.last n)) 2 P - moment (X (Fin.last n)) 1 P ^ 2)
+      + P[X (Fin.last n) ^ 2] ^ 2
       - 2 * P[X (Fin.last n) ^ 2] * P[X (Fin.last n)] ^ 2
       + P[X (Fin.last n)] ^ 4
   := by
@@ -167,245 +185,245 @@ theorem mse_scaled_svar_var
   case hXm2 =>
     sorry
 
-  conv =>
-    lhs
-    congr
-    · congr
-      · congr
-        · skip
-        · simp only [Pi.pow_apply]
-          ext ω
-          rw [mul_pow]
-          congr
-          · skip
-          · congr
-            · rw [biased_svar_eq_smean_sq_add_sq_smean]
-              unfold smean
-            · skip
-      · congr
-        · congr
-          · skip
-          · congr
-            · skip
-            · ext ω
-              rw [biased_svar_eq_smean_sq_add_sq_smean]
-              unfold smean
-        · skip
-    · skip
+  -- conv =>
+  --   lhs
+  --   congr
+  --   · congr
+  --     · congr
+  --       · skip
+  --       · simp only [Pi.pow_apply]
+  --         ext ω
+  --         rw [mul_pow]
+  --         congr
+  --         · skip
+  --         · congr
+  --           · rw [biased_svar_eq_smean_sq_add_sq_smean]
+  --             unfold smean
+  --           · skip
+  --     · congr
+  --       · congr
+  --         · skip
+  --         · congr
+  --           · skip
+  --           · ext ω
+  --             rw [biased_svar_eq_smean_sq_add_sq_smean]
+  --             unfold smean
+  --       · skip
+  --   · skip
 
-  simp only
-  conv =>
-    lhs
-    congr
-    · congr
-      · congr
-        · skip
-        · ext ω
-          rw [mul_comm, sub_sq]
-      · congr
-        · congr
-          · skip
-          · congr
-            · skip
-            · ext ω
-              rw [mul_comm]
-        · skip
-    · skip
+  -- simp only
+  -- conv =>
+  --   lhs
+  --   congr
+  --   · congr
+  --     · congr
+  --       · skip
+  --       · ext ω
+  --         rw [mul_comm, sub_sq]
+  --     · congr
+  --       · congr
+  --         · skip
+  --         · congr
+  --           · skip
+  --           · ext ω
+  --             rw [mul_comm]
+  --       · skip
+  --   · skip
 
-  rw [integral_mul_const, mul_comm]
-  rw [variance_eq_sub, sub_sq, <- pow_mul]
-  nth_rw 2 [sub_add]
-  rw [add_sub, <- sub_add]
-  rw [add_left_inj, sub_left_inj, add_eq_right]
-  rw [integral_add, integral_sub, integral_mul_const, integral_sub, integral_div]
+  -- rw [integral_mul_const, mul_comm]
+  -- rw [variance_eq_sub, sub_sq, <- pow_mul]
+  -- nth_rw 2 [sub_add]
+  -- rw [add_sub, <- sub_add]
+  -- rw [add_left_inj, sub_left_inj, add_eq_right]
+  -- rw [integral_add, integral_sub, integral_mul_const, integral_sub, integral_div]
 
-  conv =>
-    lhs
-    congr
-    · congr
-      · skip
-      · congr
-        · congr
-          · congr
-            · skip
-            · ext ω
-              rw [div_pow]
-          · congr
-            · skip
-            · ext ω
-              rw [div_pow, mul_assoc, div_mul_div_comm, <- pow_succ' (@Nat.cast ℝ Real.instNatCast (n + 1))]
-              simp only [Nat.reduceAdd]
-              rw [mul_div, mul_comm, <- mul_div]
-        · congr
-          · skip
-          · ext ω
-            rw [div_pow, div_pow, <- pow_mul, <- pow_mul]
-            simp only [Nat.reduceMul]
-    · congr
-      · congr
-        · skip
-        · congr
-          · congr
-            · skip
-            · congr
-              · skip
-              · ext ω
-                rw [div_pow]
-          · skip
-      · skip
-  simp only [Pi.pow_apply]
-  rw [integral_div, integral_div, integral_div, integral_mul_const]
-  -- rw [<- Pi.pow_apply]
+  -- conv =>
+  --   lhs
+  --   congr
+  --   · congr
+  --     · skip
+  --     · congr
+  --       · congr
+  --         · congr
+  --           · skip
+  --           · ext ω
+  --             rw [div_pow]
+  --         · congr
+  --           · skip
+  --           · ext ω
+  --             rw [div_pow, mul_assoc, div_mul_div_comm, <- pow_succ' (@Nat.cast ℝ Real.instNatCast (n + 1))]
+  --             simp only [Nat.reduceAdd]
+  --             rw [mul_div, mul_comm, <- mul_div]
+  --       · congr
+  --         · skip
+  --         · ext ω
+  --           rw [div_pow, div_pow, <- pow_mul, <- pow_mul]
+  --           simp only [Nat.reduceMul]
+  --   · congr
+  --     · congr
+  --       · skip
+  --       · congr
+  --         · congr
+  --           · skip
+  --           · congr
+  --             · skip
+  --             · ext ω
+  --               rw [div_pow]
+  --         · skip
+  --     · skip
+  -- simp only [Pi.pow_apply]
+  -- rw [integral_div, integral_div, integral_div, integral_mul_const]
+  -- -- rw [<- Pi.pow_apply]
 
-  have moment_1_sum_sq : ∫ (a : Ω), ∑ i, X i a ^ 2 ∂P = (n + 1) * moment (X (Fin.last n)) 2 P
-    := by
-    calc
-      ∫ (a : Ω), ∑ i, X i a ^ 2 ∂P
-        = ∫ (a : Ω), (∑ i, X i ^ 2) a ∂P
-      := by simp only [sum_apply, Pi.pow_apply]
-      _ = moment (∑ i, X i ^ 2) 1 P
-      := by rw [moment_def, pow_one]
-      _ = moment (∑ i, (X ^ 2) i) 1 P
-      := by simp only [Pi.pow_apply]
-      _ = (n + 1) * moment ((X ^ 2) (Fin.last n)) 1 P
-      := by
-        apply _1_moment_sum
-        case hX => sorry
-        case hXIdent => sorry
-        case hXIndep => sorry
-      _ = (n + 1) * moment (X (Fin.last n)) 2 P
-      := by
-        rw [moment_def, moment_def]
-        simp only [Pi.pow_apply, pow_one]
+  -- have moment_1_sum_sq : ∫ (a : Ω), ∑ i, X i a ^ 2 ∂P = (n + 1) * moment (X (Fin.last n)) 2 P
+  --   := by
+  --   calc
+  --     ∫ (a : Ω), ∑ i, X i a ^ 2 ∂P
+  --       = ∫ (a : Ω), (∑ i, X i ^ 2) a ∂P
+  --     := by simp only [sum_apply, Pi.pow_apply]
+  --     _ = moment (∑ i, X i ^ 2) 1 P
+  --     := by rw [moment_def, pow_one]
+  --     _ = moment (∑ i, (X ^ 2) i) 1 P
+  --     := by simp only [Pi.pow_apply]
+  --     _ = (n + 1) * moment ((X ^ 2) (Fin.last n)) 1 P
+  --     := by
+  --       apply _1_moment_sum
+  --       case hX => sorry
+  --       case hXIdent => sorry
+  --       case hXIndep => sorry
+  --     _ = (n + 1) * moment (X (Fin.last n)) 2 P
+  --     := by
+  --       rw [moment_def, moment_def]
+  --       simp only [Pi.pow_apply, pow_one]
 
-  have moment_2_sum_sq : ∫ (a : Ω), (∑ x, X x a ^ 2) ^ 2 ∂P
-    = (n + 1) * moment (X (Fin.last n)) 4 P
-      + (n + 1) * n * moment (X (Fin.last n)) 2 P ^ 2
-    := by
-    calc
-      ∫ (a : Ω), (∑ x, X x a ^ 2) ^ 2 ∂P
-        = ∫ (ω : Ω), ((∑ i, (X i) ^ 2) ^ 2) ω ∂P
-      := by simp only [Pi.pow_apply, sum_apply]
-      _ = moment (∑ i, (fun j => (X j) ^ 2) i) 2 P
-      := by rw [moment_def]
-      _ = (n + 1) * moment (X (Fin.last n) ^ 2) 2 P
-        + (n + 1) * n * moment (X (Fin.last n) ^ 2) 1 P ^ 2
-      := by
-        rw [_2_moment_sum ?hX ?hXIndep ?hXIdent]
-        case hX =>
-          intro i
-          sorry
-        case hXIndep =>
-          -- apply iIndepFun.comp ?h1
-          sorry
-        case hXIdent =>
-          sorry
-      _ = (n + 1) * moment (X (Fin.last n)) 4 P
-        + (n + 1) * n * moment (X (Fin.last n)) 2 P ^ 2
-      := by
-        rw [moment_def, moment_def, <- pow_mul, <- pow_mul, <- moment_def, <- moment_def]
+  -- have moment_2_sum_sq : ∫ (a : Ω), (∑ x, X x a ^ 2) ^ 2 ∂P
+  --   = (n + 1) * moment (X (Fin.last n)) 4 P
+  --     + (n + 1) * n * moment (X (Fin.last n)) 2 P ^ 2
+  --   := by
+  --   calc
+  --     ∫ (a : Ω), (∑ x, X x a ^ 2) ^ 2 ∂P
+  --       = ∫ (ω : Ω), ((∑ i, (X i) ^ 2) ^ 2) ω ∂P
+  --     := by simp only [Pi.pow_apply, sum_apply]
+  --     _ = moment (∑ i, (fun j => (X j) ^ 2) i) 2 P
+  --     := by rw [moment_def]
+  --     _ = (n + 1) * moment (X (Fin.last n) ^ 2) 2 P
+  --       + (n + 1) * n * moment (X (Fin.last n) ^ 2) 1 P ^ 2
+  --     := by
+  --       rw [_2_moment_sum ?hX ?hXIndep ?hXIdent]
+  --       case hX =>
+  --         intro i
+  --         sorry
+  --       case hXIndep =>
+  --         -- apply iIndepFun.comp ?h1
+  --         sorry
+  --       case hXIdent =>
+  --         sorry
+  --     _ = (n + 1) * moment (X (Fin.last n)) 4 P
+  --       + (n + 1) * n * moment (X (Fin.last n)) 2 P ^ 2
+  --     := by
+  --       rw [moment_def, moment_def, <- pow_mul, <- pow_mul, <- moment_def, <- moment_def]
 
-  conv =>
-    lhs
-    congr
-    · congr
-      · skip
-      · congr
-        · congr
-          · congr
-            · rw [moment_2_sum_sq]
-            · skip
-          · congr
-            · skip -- TODO
-            · skip
-        · congr
-          · calc
-            ∫ (a : Ω), (∑ x, X x a) ^ 4 ∂P
-              = ∫ (a : Ω), ((∑ x, X x) ^ 4) a ∂P
-            := by simp only [Pi.pow_apply, sum_apply]
-            _ = moment (∑ x, X x) 4 P
-            := by rw [moment_def]
-            _ = 1 * (n + 1) * moment (X (Fin.last n)) 4 P
-              + 3 * (n + 1) * n * (moment (X (Fin.last n)) 2 P) ^ 2
-              + 4 * (n + 1) * n * (moment (X (Fin.last n)) 3 P) * (moment (X (Fin.last n)) 1 P)
-              + 6 * (n + 1) * n * (n - 1) * (moment (X (Fin.last n)) 2 P) * (moment (X (Fin.last n)) 1 P) ^ 2
-              + 1 * (n + 1) * n * (n - 1) * (n - 2) * (moment (X (Fin.last n)) 1 P ^ 4)
-            := by
-              apply _4_moment_sum
-              case hX => sorry
-              case hXIndep => sorry
-              case hXIdent => sorry
-          · skip
-    · congr
-      · congr
-        · skip
-        · congr
-          · congr
-            · congr
-              · rw [moment_1_sum_sq]
-              · skip
-            · congr
-              · calc
-                ∫ (a : Ω), (∑ x, X x a) ^ 2 ∂P
-                  = ∫ (a : Ω), ((∑ x, X x) ^ 2) a ∂P
-                := by simp only [Pi.pow_apply, sum_apply]
-                _ = moment (∑ x, X x) 2 P
-                := by rw [moment_def]
-                _ = (n + 1) * moment (X (Fin.last n)) 2 P
-                  + (n + 1) * n * moment (X (Fin.last n)) 1 P ^ 2
-                := by
-                  apply _2_moment_sum
-                  case hX => sorry
-                  case hXIdent => sorry
-                  case hXIndep => sorry
-              · skip
-          · skip
-      · congr
-        · calc
-          ∫ (x : Ω), X (Fin.last n) x ^ 2 ∂P
-            = moment (X (Fin.last n)) 2 P
-          := by
-            rw [moment_def]
-            simp only [Pi.pow_apply]
-          _ = moment (X (Fin.last n)) 2 P
-          := by simp only
-        · congr
-          · calc
-            ∫ (x : Ω), X (Fin.last n) x ∂P
-              = moment (X (Fin.last n)) 1 P
-            := by
-              rw [moment_def]
-              simp only [Pi.pow_apply, pow_one]
-            _ = moment (X (Fin.last n)) 1 P
-            := by simp only
-          · skip
+  -- conv =>
+  --   lhs
+  --   congr
+  --   · congr
+  --     · skip
+  --     · congr
+  --       · congr
+  --         · congr
+  --           · rw [moment_2_sum_sq]
+  --           · skip
+  --         · congr
+  --           · skip -- TODO
+  --           · skip
+  --       · congr
+  --         · calc
+  --           ∫ (a : Ω), (∑ x, X x a) ^ 4 ∂P
+  --             = ∫ (a : Ω), ((∑ x, X x) ^ 4) a ∂P
+  --           := by simp only [Pi.pow_apply, sum_apply]
+  --           _ = moment (∑ x, X x) 4 P
+  --           := by rw [moment_def]
+  --           _ = 1 * (n + 1) * moment (X (Fin.last n)) 4 P
+  --             + 3 * (n + 1) * n * (moment (X (Fin.last n)) 2 P) ^ 2
+  --             + 4 * (n + 1) * n * (moment (X (Fin.last n)) 3 P) * (moment (X (Fin.last n)) 1 P)
+  --             + 6 * (n + 1) * n * (n - 1) * (moment (X (Fin.last n)) 2 P) * (moment (X (Fin.last n)) 1 P) ^ 2
+  --             + 1 * (n + 1) * n * (n - 1) * (n - 2) * (moment (X (Fin.last n)) 1 P ^ 4)
+  --           := by
+  --             apply _4_moment_sum
+  --             case hX => sorry
+  --             case hXIndep => sorry
+  --             case hXIdent => sorry
+  --         · skip
+  --   · congr
+  --     · congr
+  --       · skip
+  --       · congr
+  --         · congr
+  --           · congr
+  --             · rw [moment_1_sum_sq]
+  --             · skip
+  --           · congr
+  --             · calc
+  --               ∫ (a : Ω), (∑ x, X x a) ^ 2 ∂P
+  --                 = ∫ (a : Ω), ((∑ x, X x) ^ 2) a ∂P
+  --               := by simp only [Pi.pow_apply, sum_apply]
+  --               _ = moment (∑ x, X x) 2 P
+  --               := by rw [moment_def]
+  --               _ = (n + 1) * moment (X (Fin.last n)) 2 P
+  --                 + (n + 1) * n * moment (X (Fin.last n)) 1 P ^ 2
+  --               := by
+  --                 apply _2_moment_sum
+  --                 case hX => sorry
+  --                 case hXIdent => sorry
+  --                 case hXIndep => sorry
+  --             · skip
+  --         · skip
+  --     · congr
+  --       · calc
+  --         ∫ (x : Ω), X (Fin.last n) x ^ 2 ∂P
+  --           = moment (X (Fin.last n)) 2 P
+  --         := by
+  --           rw [moment_def]
+  --           simp only [Pi.pow_apply]
+  --         _ = moment (X (Fin.last n)) 2 P
+  --         := by simp only
+  --       · congr
+  --         · calc
+  --           ∫ (x : Ω), X (Fin.last n) x ∂P
+  --             = moment (X (Fin.last n)) 1 P
+  --           := by
+  --             rw [moment_def]
+  --             simp only [Pi.pow_apply, pow_one]
+  --           _ = moment (X (Fin.last n)) 1 P
+  --           := by simp only
+  --         · skip
 
-  simp only [Nat.cast_add, Nat.cast_one]
-  let Xi : Ω → ℝ := X (Fin.last n)
-  have hXi : Xi = X (Fin.last n) := by rfl
-  simp_rw [<- hXi]
+  -- simp only [Nat.cast_add, Nat.cast_one]
+  -- let Xi : Ω → ℝ := X (Fin.last n)
+  -- have hXi : Xi = X (Fin.last n) := by rfl
+  -- simp_rw [<- hXi]
 
-  simp only [one_mul]
-  conv in (((↑n + 1) * moment Xi 4 P + (↑n + 1) * ↑n * moment Xi 2 P ^ 2) / (↑n + 1) ^ 2) => rw [add_div]
-  conv in ((↑n + 1) * moment Xi 4 P / (↑n + 1) ^ 2) => rw [mul_comm, <- mul_div]
-  nth_rw 1 [<- pow_one (@HAdd.hAdd ℝ ℝ ℝ instHAdd (↑n) 1)]
-  -- rw [div_eq_mul_inv]
-  conv in ((↑n + 1) ^ 1 / (↑n + 1) ^ 2) => calc
-    (@HDiv.hDiv ℝ ℝ ℝ instHDiv ((↑n + 1) ^ 1) ((↑n + 1) ^ 2))
-      = ((n + 1) ^ 0 / (n + 1) ^ 1)
-    := by
-      rw [div_eq_div_iff]
-      case hb =>
-        rw [ne_eq, sq_eq_zero_iff, <- Nat.cast_one, <- Nat.cast_add, Nat.cast_eq_zero]
-        rw [<- Nat.succ_eq_add_one, <- ne_eq]
-        apply Nat.succ_ne_zero
-      case hd =>
-        rw [ne_eq, pow_one, <- Nat.cast_one, <- Nat.cast_add, Nat.cast_eq_zero]
-        rw [<- Nat.succ_eq_add_one, <- ne_eq]
-        apply Nat.succ_ne_zero
-      linarith only []
-    _ = (1 / (n + 1))
-    := by simp only [pow_zero, pow_one, one_div]
+  -- simp only [one_mul]
+  -- conv in (((↑n + 1) * moment Xi 4 P + (↑n + 1) * ↑n * moment Xi 2 P ^ 2) / (↑n + 1) ^ 2) => rw [add_div]
+  -- conv in ((↑n + 1) * moment Xi 4 P / (↑n + 1) ^ 2) => rw [mul_comm, <- mul_div]
+  -- nth_rw 1 [<- pow_one (@HAdd.hAdd ℝ ℝ ℝ instHAdd (↑n) 1)]
+  -- -- rw [div_eq_mul_inv]
+  -- conv in ((↑n + 1) ^ 1 / (↑n + 1) ^ 2) => calc
+  --   (@HDiv.hDiv ℝ ℝ ℝ instHDiv ((↑n + 1) ^ 1) ((↑n + 1) ^ 2))
+  --     = ((n + 1) ^ 0 / (n + 1) ^ 1)
+  --   := by
+  --     rw [div_eq_div_iff]
+  --     case hb =>
+  --       rw [ne_eq, sq_eq_zero_iff, <- Nat.cast_one, <- Nat.cast_add, Nat.cast_eq_zero]
+  --       rw [<- Nat.succ_eq_add_one, <- ne_eq]
+  --       apply Nat.succ_ne_zero
+  --     case hd =>
+  --       rw [ne_eq, pow_one, <- Nat.cast_one, <- Nat.cast_add, Nat.cast_eq_zero]
+  --       rw [<- Nat.succ_eq_add_one, <- ne_eq]
+  --       apply Nat.succ_ne_zero
+  --     linarith only []
+  --   _ = (1 / (n + 1))
+  --   := by simp only [pow_zero, pow_one, one_div]
 
   -- simp_rw [mul_add, add_mul, mul_sub, sub_mul, add_div, one_mul]
   -- simp_rw [mul_add, add_mul, mul_sub, sub_mul]
