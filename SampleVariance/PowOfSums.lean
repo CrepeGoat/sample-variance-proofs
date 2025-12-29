@@ -80,12 +80,12 @@ theorem sum_sq_mul_sq_sum
     enter [1, 2, i1, 2]
     rw [mul_comm, sum_mul]
 
-  conv =>
-    enter [1, 2, i1, 2, 2, i2, 2]
-    rw [<- sum_erase_add (univ.erase i1) (fun i => f i ^ 2) (by
-      simp only [mem_erase, ne_eq, mem_univ, and_true]
-      sorry
-      )]
+  -- conv =>
+  --   enter [1, 2, i1, 2, 2, i2, 2]
+  --   rw [<- sum_erase_add (univ.erase i1) (fun i => f i ^ 2) (by
+  --     simp only [mem_erase, ne_eq, mem_univ, and_true]
+  --     sorry
+  --     )]
 
 
   -- conv =>

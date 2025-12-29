@@ -181,6 +181,62 @@ theorem mse_scaled_svar_var
   case hXm2 =>
     sorry
 
+  unfold biased_svar smean
+  rw [variance_eq_sub ?hMemLp]
+  case hMemLp =>
+    apply MemLp.mono_exponent
+    case q => exact 4
+    case hpq =>
+      rw [Nat.ofNat_le]
+      simp only [Nat.reduceLeDiff]
+    case hfq => exact hX (Fin.last n)
+
+  have hn_neq_0 : @Ne ℝ (↑(n + 1)) 0 := by
+    rw [Nat.cast_ne_zero];
+    simp only [ne_eq, Nat.add_eq_zero, one_ne_zero, and_false, not_false_eq_true]
+
+  simp only [Pi.pow_apply]
+  conv =>
+    enter [1, 1, 1, 2, ω]
+    rw [mul_div, mul_comm, <- mul_div, mul_comm, mul_pow]
+  conv =>
+    enter [1, 1, 1]
+    rw [integral_const_mul]
+  conv =>
+    enter [1, 1, 1, 2, 2, ω, 1, 2, i]
+    rw [sub_sq]
+  conv =>
+    enter [1, 1, 1, 2, 2, ω]
+    rw [sum_add_distrib, sum_sub_distrib]
+  conv =>
+    enter [1, 1, 1, 2, 2, ω, 1, 1, 2, 2, x]
+    rw [mul_div, mul_assoc, mul_comm, <- mul_div, mul_comm]
+  conv =>
+    enter [1, 1, 1, 2, 2, ω, 1, 1, 2]
+    rw [<- mul_sum, <- sum_mul]
+  conv =>
+    enter [1, 1, 1, 2, 2, ω, 1, 2, 2, i]
+    rw [div_pow, <- mul_one (@HPow.hPow ℝ ℕ ℝ instHPow (∑ x, X x ω) 2), <- mul_div, mul_comm]
+  conv =>
+    enter [1, 1, 1, 2, 2, ω, 1, 2]
+    rw [<- mul_sum]
+  conv =>
+    enter [1, 1, 1, 2, 2, ω]
+    rw [add_sq, mul_sub, mul_pow, div_pow, <- pow_mul, sub_sq]
+    simp only [sum_const, Nat.reduceMul, card_univ, Fintype.card_fin, nsmul_eq_mul]
+  conv =>
+    enter [1, 1, 1, 2, 2, ω, 1, 2, 2]
+    rw [<- mul_assoc, div_mul, sq, <- mul_div, div_self hn_neq_0, mul_one]
+  conv =>
+    enter [1, 1, 1, 2, 2, ω, 2]
+    rw [one_pow, mul_pow, <- pow_mul, <- mul_assoc, div_mul, pow_succ, pow_succ, mul_assoc, <- sq,
+      <- mul_div, div_self (by rw [ne_eq, sq_eq_zero_iff, <- ne_eq]; apply hn_neq_0), mul_one]
+    simp only [Nat.reduceMul]
+  rw [integral_add, integral_add, integral_add, integral_sub]
+  conv =>
+    enter [1, 1, 1, 2, 1, 2, 2, ω]
+    rw [sub_mul, <- sq]
+  rw [integral_sub]
   -- conv =>
   --   lhs
   --   congr
