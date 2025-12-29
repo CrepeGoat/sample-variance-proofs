@@ -153,28 +153,22 @@ theorem mse_scaled_svar_var
   : mse (fun ω => k * biased_svar (fun i => X i ω)) (variance (X (Fin.last n)) P) P
     =
       k ^ 2 * (
-        moment (X (Fin.last n)) 4 P * (1 / (↑n + 1))
-        + (↑n + 1) * ↑n * moment (X (Fin.last n)) 2 P ^ 2 / (↑n + 1) ^ 2
-        - (∫ (a : Ω), (∑ x, X x a ^ 2) * (∑ x, X x a) ^ 2 ∂P) * (2 / (↑n + 1) ^ 3)
+        (1 / (↑n + 1)) * moment (X (Fin.last n)) 4 P
+        + ↑n * moment (X (Fin.last n)) 2 P ^ 2 / (↑n + 1)
+        - (2 / (↑n + 1) ^ 3) * (∫ (a : Ω), (∑ x, X x a ^ 2) * (∑ x, X x a) ^ 2 ∂P)
         + (
-          (↑n + 1) * moment (X (Fin.last n)) 4 P + 3 * (↑n + 1) * ↑n * moment (X (Fin.last n)) 2 P ^ 2
-          + 4 * (↑n + 1) * ↑n * moment (X (Fin.last n)) 3 P * moment (X (Fin.last n)) 1 P
-          + 6 * (↑n + 1) * ↑n * (↑n - 1) * moment (X (Fin.last n)) 2 P * moment (X (Fin.last n)) 1 P ^ 2
-          + (↑n + 1) * ↑n * (↑n - 1) * (↑n - 2) * moment (X (Fin.last n)) 1 P ^ 4
-        ) / (↑n + 1) ^ 4
+          moment (X (Fin.last n)) 4 P
+          + 3 * ↑n * moment (X (Fin.last n)) 2 P ^ 2
+          + 4 * ↑n * moment (X (Fin.last n)) 3 P * moment (X (Fin.last n)) 1 P
+          + 6 * ↑n * (↑n - 1) * moment (X (Fin.last n)) 2 P * moment (X (Fin.last n)) 1 P ^ 2
+          + ↑n * (↑n - 1) * (↑n - 2) * moment (X (Fin.last n)) 1 P ^ 4
+        ) / (↑n + 1) ^ 3
       )
-      - 2 * (
-        (
-          (↑n + 1) * moment (X (Fin.last n)) 2 P / (↑n + 1)
-          - (
-            (↑n + 1) * moment (X (Fin.last n)) 2 P
-            + (↑n + 1) * ↑n * moment (X (Fin.last n)) 1 P ^ 2
-          ) / (↑n + 1) ^ 2
-        ) * k
-      ) * (moment (X (Fin.last n)) 2 P - moment (X (Fin.last n)) 1 P ^ 2)
-      + P[X (Fin.last n) ^ 2] ^ 2
-      - 2 * P[X (Fin.last n) ^ 2] * P[X (Fin.last n)] ^ 2
-      + P[X (Fin.last n)] ^ 4
+      - (2 * k * (↑n / (↑n + 1)) + 1) * (
+        moment (X (Fin.last n)) 2 P ^ 2
+        - 2 * moment (X (Fin.last n)) 2 P * moment (X (Fin.last n)) 1 P ^ 2
+        + moment (X (Fin.last n)) 1 P ^ 4
+      )
   := by
   rw [mse_eq]
   case hXIntegrable =>
