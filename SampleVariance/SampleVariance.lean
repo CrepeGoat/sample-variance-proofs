@@ -251,7 +251,10 @@ private theorem moment_2_scaled_svar
   (hXIdent : (i j : Fin (n + 1)) → IdentDistrib (X i) (X j) P P)
   (k : ℝ)
   : P[(fun ω => k * biased_svar (fun i => X i ω)) ^ 2]
-    = k ^ 2 * 0
+    = k ^ 2 * (
+      ((↑n + 1) ^ 2 + 1) / (↑n + 1) ^ 3 * moment (X (Fin.last n)) 4 P
+      + ↑n / (↑n + 1) * (1 + 3 / (↑n + 1) ^ 2) * moment (X (Fin.last n)) 2 P ^ 2
+    )
   := by
   let Xi : Ω → ℝ := X (Fin.last n)
   have hXi : Xi = X (Fin.last n) := by rfl
@@ -324,7 +327,84 @@ private theorem moment_2_scaled_svar
     rw [mul_assoc, mul_comm, <- mul_div, sq (_ + 1), div_mul_eq_div_div, div_self h1,
       mul_div, mul_one]
   simp_rw [add_assoc]
+  rw [add_comm, add_sub, add_comm]
+  simp_rw [add_assoc, <- add_assoc]
+  conv =>
+    enter [1, 1, 1, 1, 1, 1]
+    rw [add_comm, <- add_assoc]
+  conv =>
+    enter [1, 1, 1, 1, 1, 1, 1]
+    calc
+      (↑n + 1) * moment Xi 4 P / (↑n + 1) ^ 4 + moment Xi 4 P / (↑n + 1)
+        = moment Xi 4 P / (↑n + 1) ^ 3 + moment Xi 4 P / (↑n + 1)
+      := by
+        rw [add_left_inj, mul_comm, <- mul_div]
+        nth_rw 2 [div_eq_mul_one_div]
+        rw [mul_eq_mul_left_iff]
+        left
+        rw [pow_succ', div_mul_eq_div_div, div_self h1]
+      _ = moment Xi 4 P * (1 / (↑n + 1) ^ 3 + 1 / (↑n + 1))
+      := by
+        rw [<- mul_one (moment Xi 4 P), <- mul_div, <- mul_div, <- mul_add, mul_one]
+      _ = (((↑n + 1) ^ 2 + 1) / (↑n + 1) ^ 3) * moment Xi 4 P
+      := by
+        rw [mul_comm, mul_eq_mul_right_iff]
+        left
+        nth_rw 1 [pow_succ']
+        rw [div_mul_eq_div_div, div_eq_mul_one_div]
+        nth_rw 2 [<- mul_one (@HDiv.hDiv ℝ ℝ ℝ instHDiv 1 (↑n + 1) : ℝ)]
+        rw [<- mul_add]
+        nth_rw 3 [pow_succ]
+        rw [div_mul_eq_div_div]
+        nth_rw 3 [div_eq_mul_one_div]
+        rw [mul_comm, mul_eq_mul_right_iff]
+        left
+        rw [add_div, <- div_pow, div_self h1, one_pow, add_comm]
+  rw [add_assoc, add_assoc, add_assoc, add_assoc, <- add_sub]
+  nth_rw 1 [add_div]
+  rw [add_right_inj]
 
+  rw [<- add_assoc, <- add_assoc, <- add_assoc]
+  conv =>
+    enter [1, 1, 1, 1, 1]
+    calc
+      ↑n * moment Xi 2 P ^ 2 / (↑n + 1)
+        + 3 * (↑n + 1) * ↑n * moment Xi 2 P ^ 2 / (↑n + 1) ^ 4
+        = ↑n * moment Xi 2 P ^ 2 * (1 / (↑n + 1) + 3 * (↑n + 1) / (↑n + 1) ^ 4)
+      := by
+        rw [mul_assoc]
+        nth_rw 2 [mul_comm]
+        nth_rw 1 [div_eq_mul_one_div]
+        rw [<- mul_div, <- mul_add, mul_eq_mul_left_iff]
+        left
+        simp only [one_div]
+      _ = ↑n / (↑n + 1) * moment Xi 2 P ^ 2 * (1 + 3 * (↑n + 1) / (↑n + 1) ^ 3)
+      := by
+        nth_rw 5 [mul_comm]
+        nth_rw 1 [mul_div]
+        nth_rw 5 [mul_comm]
+        nth_rw 4 [mul_comm]
+        nth_rw 1 [mul_div]
+        nth_rw 4 [mul_comm]
+        nth_rw 2 [<- mul_div]
+        rw [mul_eq_mul_left_iff]
+        left
+        rw [add_div, add_right_inj, <- mul_div, <- mul_div, <- mul_div, mul_eq_mul_left_iff]
+        left
+        rw [div_div, pow_succ]
+      _ = ↑n / (↑n + 1) * moment Xi 2 P ^ 2 * (1 + 3 / (↑n + 1) ^ 2)
+      := by
+        rw [mul_eq_mul_left_iff]
+        left
+        rw [add_right_inj]
+        nth_rw 2 [div_eq_mul_one_div]
+        rw [<- mul_div, mul_eq_mul_left_iff]
+        left
+        rw [pow_succ', div_mul_eq_div_div, div_self h1]
+      _ = ↑n / (↑n + 1) * (1 + 3 / (↑n + 1) ^ 2) * moment Xi 2 P ^ 2
+      := by linarith only []
+  rw [add_assoc, add_assoc, <- add_sub]
+  rw [add_eq_left]
   sorry
 
 theorem mse_scaled_svar_var
