@@ -142,6 +142,110 @@ theorem mse_eq
   rw [<- sub_eq_iff_eq_add.mp]
   rw [variance_eq_sub hXm2]
 
+private theorem moment_1_scaled_svar
+  {Ω : Type u_1} [m : MeasurableSpace Ω]
+  {n : ℕ}
+  {X : Fin (n + 1) → Ω → ℝ}
+  {P : Measure Ω} [IsProbabilityMeasure P]
+  (hX : ∀ i, MemLp (X i) 4 P)
+  (hXIntegrable : (i : Fin (n + 1)) → Integrable (X i) P)
+  (hXIndep : iIndepFun X P)
+  (hXIdent : (i j : Fin (n + 1)) → IdentDistrib (X i) (X j) P P)
+  (k : ℝ)
+  : P[fun ω => k * biased_svar (fun i => X i ω)]
+    = k * (↑n / (↑n + 1)) * (
+      moment (X (Fin.last n)) 2 P
+      - moment (X (Fin.last n)) 1 P ^ 2
+    )
+  := by
+  let Xi : Ω → ℝ := X (Fin.last n)
+  have hXi : Xi = X (Fin.last n) := by rfl
+
+  have h1 : @HAdd.hAdd ℝ ℝ ℝ instHAdd (↑n) 1 ≠ 0 := by
+    rw [ne_eq, <- Nat.cast_one, <- Nat.cast_add, @Nat.cast_eq_zero, Nat.add_one, <- ne_eq]
+    apply Nat.succ_ne_zero
+
+  conv in (biased_svar _) => rw [biased_svar_eq_smean_sq_add_sq_smean]
+  unfold smean
+  simp only [Nat.cast_add, Nat.cast_one]
+
+  rw [integral_const_mul, integral_sub, integral_div]
+  case hf => sorry
+  case hg => sorry
+  rw [mul_assoc, mul_right_inj' ?hkneq0]
+  case hkneq0 => sorry
+  conv =>
+    enter [1, 2, 2, ω]
+    rw [div_pow]
+  rw [integral_div]
+  conv =>
+    enter [1, 1, 1]
+    calc
+      ∫ (a : Ω), ∑ x, X x a ^ 2 ∂P
+        = ∫ (a : Ω), ∑ x, (X x ^ 2) a ∂P
+      := by simp only [Pi.pow_apply]
+      _ = ∫ (a : Ω), ((∑ x, X x ^ 2) ^ 1) a ∂P
+      := by simp only [Pi.pow_apply, sum_apply, pow_one]
+  rw [<- moment, _1_moment_sum, mul_comm, <- mul_div, div_self h1, mul_one]
+  case hX =>
+    intro i
+      -- rw [sq, <- RCLike.normSq_to_real]
+    -- calc
+    --   MemLp (X i ^ 2) 1 P
+    --     = MemLp (fun ω => (X i ω) ^ 2) 1 P
+    --   := by sorry
+    --   _ = MemLp (fun ω => ‖(X i ω) ^ 2‖) 1 P
+    --   := by
+    --     rw [memLp_norm_iff ?hX2]
+    --     case hX2 => sorry
+    --   _ = MemLp (fun ω => ‖(X i ω)‖ ^ 2) 1 P
+    --   := by
+    --     simp only [norm_pow, Real.norm_eq_abs, sq_abs]
+    --   _ = MemLp (fun ω => ‖(X i ω)‖ ^ 1) 2 P
+    --   := by
+    --     -- rw [<- MemLp.norm_rpow_div]
+    --     sorry
+    --   _ = MemLp (X i) 2 P
+    --   := by
+    --     simp only [Real.norm_eq_abs, pow_one, eq_iff_iff]
+    --     sorry
+    sorry
+  case hXIndep => sorry
+  case hXIdent =>
+    sorry
+  rw [moment]
+  conv =>
+    enter[1, 1, 2, x]
+    rw [<- pow_mul]
+    simp only [Nat.reduceMul]
+  rw [<- moment]
+
+  conv =>
+    enter [1, 2, 1, 2, ω]
+    rw [<- sum_apply, <- Pi.pow_apply]
+  rw [<- moment, _2_moment_sum ?hX hXIndep hXIdent, mul_assoc, <- mul_add, mul_comm, <- mul_div]
+  case hX =>
+    intro i
+    apply MemLp.mono_exponent (hX i)
+    rw [Nat.ofNat_le]
+    apply Nat.succ_le_succ
+    apply Nat.succ_le_succ
+    apply zero_le
+
+  conv =>
+    enter [1, 2, 2]
+    rw [sq]
+  rw [div_mul_eq_div_div, div_self h1]
+  rw [mul_comm]
+
+  rw [<- hXi]
+  nth_rw 1 [<- one_mul (moment Xi 2 P)]
+  rw [mul_add, <- sub_sub, <- sub_mul, sub_div' h1, one_mul, <- add_sub, sub_self, add_zero]
+  rw [mul_sub, sub_right_inj]
+  rw [<- mul_assoc]
+  conv =>
+    enter [1, 1]
+    rw [mul_comm, mul_div, mul_one]
 
 theorem mse_scaled_svar_var
   {Ω : Type u_1} [m : MeasurableSpace Ω]
@@ -181,7 +285,14 @@ theorem mse_scaled_svar_var
   case hXm2 =>
     sorry
 
-  unfold biased_svar smean
+  let Xi : Ω → ℝ := X (Fin.last n)
+  have hXi : Xi = X (Fin.last n) := by rfl
+  rw [<- hXi]
+
+  conv in (biased_svar _) => rw [biased_svar_eq_smean_sq_add_sq_smean]
+  conv in (biased_svar _) => rw [biased_svar_eq_smean_sq_add_sq_smean]
+  unfold smean
+  simp only [Pi.pow_apply]
   rw [variance_eq_sub ?hMemLp]
   case hMemLp =>
     apply MemLp.mono_exponent
@@ -196,47 +307,57 @@ theorem mse_scaled_svar_var
     simp only [ne_eq, Nat.add_eq_zero, one_ne_zero, and_false, not_false_eq_true]
 
   simp only [Pi.pow_apply]
+  rw [integral_const_mul, integral_sub, integral_div]
+  -- rw [integral_const_mul, integral_mul_const, integral_div, integral_add, integral_sub]
   conv =>
     enter [1, 1, 1, 2, ω]
-    rw [mul_div, mul_comm, <- mul_div, mul_comm, mul_pow]
-  conv =>
-    enter [1, 1, 1]
-    rw [integral_const_mul]
-  conv =>
-    enter [1, 1, 1, 2, 2, ω, 1, 2, i]
-    rw [sub_sq]
-  conv =>
-    enter [1, 1, 1, 2, 2, ω]
-    rw [sum_add_distrib, sum_sub_distrib]
-  conv =>
-    enter [1, 1, 1, 2, 2, ω, 1, 1, 2, 2, x]
-    rw [mul_div, mul_assoc, mul_comm, <- mul_div, mul_comm]
-  conv =>
-    enter [1, 1, 1, 2, 2, ω, 1, 1, 2]
-    rw [<- mul_sum, <- sum_mul]
-  conv =>
-    enter [1, 1, 1, 2, 2, ω, 1, 2, 2, i]
-    rw [div_pow, <- mul_one (@HPow.hPow ℝ ℕ ℝ instHPow (∑ x, X x ω) 2), <- mul_div, mul_comm]
-  conv =>
-    enter [1, 1, 1, 2, 2, ω, 1, 2]
-    rw [<- mul_sum]
-  conv =>
-    enter [1, 1, 1, 2, 2, ω]
-    rw [add_sq, mul_sub, mul_pow, div_pow, <- pow_mul, sub_sq]
-    simp only [sum_const, Nat.reduceMul, card_univ, Fintype.card_fin, nsmul_eq_mul]
-  conv =>
-    enter [1, 1, 1, 2, 2, ω, 1, 2, 2]
-    rw [<- mul_assoc, div_mul, sq, <- mul_div, div_self hn_neq_0, mul_one]
-  conv =>
-    enter [1, 1, 1, 2, 2, ω, 2]
-    rw [one_pow, mul_pow, <- pow_mul, <- mul_assoc, div_mul, pow_succ, pow_succ, mul_assoc, <- sq,
-      <- mul_div, div_self (by rw [ne_eq, sq_eq_zero_iff, <- ne_eq]; apply hn_neq_0), mul_one]
+    rw [mul_pow, div_pow, sub_sq, div_pow, div_pow, <- pow_mul, <- pow_mul]
     simp only [Nat.reduceMul]
-  rw [integral_add, integral_add, integral_add, integral_sub]
-  conv =>
-    enter [1, 1, 1, 2, 1, 2, 2, ω]
-    rw [sub_mul, <- sq]
-  rw [integral_sub]
+  rw [integral_const_mul, integral_add, integral_sub, integral_div, integral_div, mul_add, mul_sub]
+
+  -- conv =>
+  --   enter [1, 1, 1, 2, ω]
+  --   rw [mul_div, mul_comm, <- mul_div, mul_comm, mul_pow]
+  -- conv =>
+  --   enter [1, 1, 1]
+  --   rw [integral_const_mul]
+  -- conv =>
+  --   enter [1, 1, 1, 2, 2, ω, 1, 2, i]
+  --   rw [sub_sq]
+  -- conv =>
+  --   enter [1, 1, 1, 2, 2, ω]
+  --   rw [sum_add_distrib, sum_sub_distrib]
+  -- conv =>
+  --   enter [1, 1, 1, 2, 2, ω, 1, 1, 2, 2, x]
+  --   rw [mul_div, mul_assoc, mul_comm, <- mul_div, mul_comm]
+  -- conv =>
+  --   enter [1, 1, 1, 2, 2, ω, 1, 1, 2]
+  --   rw [<- mul_sum, <- sum_mul]
+  -- conv =>
+  --   enter [1, 1, 1, 2, 2, ω, 1, 2, 2, i]
+  --   rw [div_pow, <- mul_one (@HPow.hPow ℝ ℕ ℝ instHPow (∑ x, X x ω) 2), <- mul_div, mul_comm]
+  -- conv =>
+  --   enter [1, 1, 1, 2, 2, ω, 1, 2]
+  --   rw [<- mul_sum]
+  -- conv =>
+  --   enter [1, 1, 1, 2, 2, ω]
+  --   rw [add_sq, mul_sub, mul_pow, div_pow, <- pow_mul, sub_sq]
+  --   simp only [sum_const, Nat.reduceMul, card_univ, Fintype.card_fin, nsmul_eq_mul]
+  -- conv =>
+  --   enter [1, 1, 1, 2, 2, ω, 1, 2, 2]
+  --   rw [<- mul_assoc, div_mul, sq, <- mul_div, div_self hn_neq_0, mul_one]
+  -- conv =>
+  --   enter [1, 1, 1, 2, 2, ω, 2]
+  --   rw [one_pow, mul_pow, <- pow_mul, <- mul_assoc, div_mul, pow_succ, pow_succ, mul_assoc, <- sq,
+  --     <- mul_div, div_self (by rw [ne_eq, sq_eq_zero_iff, <- ne_eq]; apply hn_neq_0), mul_one]
+  --   simp only [Nat.reduceMul]
+  -- rw [integral_add, integral_add, integral_add, integral_sub]
+  -- conv =>
+  --   enter [1, 1, 1, 2, 1, 2, 2, ω]
+  --   rw [sub_mul, <- sq]
+  -- rw [integral_sub]
+
+
   -- conv =>
   --   lhs
   --   congr
@@ -262,7 +383,7 @@ theorem mse_scaled_svar_var
   --             unfold smean
   --       · skip
   --   · skip
-
+  --
   -- simp only
   -- conv =>
   --   lhs
@@ -281,14 +402,14 @@ theorem mse_scaled_svar_var
   --             rw [mul_comm]
   --       · skip
   --   · skip
-
+  --
   -- rw [integral_mul_const, mul_comm]
   -- rw [variance_eq_sub, sub_sq, <- pow_mul]
   -- nth_rw 2 [sub_add]
   -- rw [add_sub, <- sub_add]
   -- rw [add_left_inj, sub_left_inj, add_eq_right]
   -- rw [integral_add, integral_sub, integral_mul_const, integral_sub, integral_div]
-
+  --
   -- conv =>
   --   lhs
   --   congr
@@ -326,7 +447,7 @@ theorem mse_scaled_svar_var
   -- simp only [Pi.pow_apply]
   -- rw [integral_div, integral_div, integral_div, integral_mul_const]
   -- -- rw [<- Pi.pow_apply]
-
+  --
   -- have moment_1_sum_sq : ∫ (a : Ω), ∑ i, X i a ^ 2 ∂P = (n + 1) * moment (X (Fin.last n)) 2 P
   --   := by
   --   calc
@@ -347,7 +468,7 @@ theorem mse_scaled_svar_var
   --     := by
   --       rw [moment_def, moment_def]
   --       simp only [Pi.pow_apply, pow_one]
-
+  --
   -- have moment_2_sum_sq : ∫ (a : Ω), (∑ x, X x a ^ 2) ^ 2 ∂P
   --   = (n + 1) * moment (X (Fin.last n)) 4 P
   --     + (n + 1) * n * moment (X (Fin.last n)) 2 P ^ 2
@@ -374,7 +495,7 @@ theorem mse_scaled_svar_var
   --       + (n + 1) * n * moment (X (Fin.last n)) 2 P ^ 2
   --     := by
   --       rw [moment_def, moment_def, <- pow_mul, <- pow_mul, <- moment_def, <- moment_def]
-
+  --
   -- conv =>
   --   lhs
   --   congr
@@ -449,12 +570,12 @@ theorem mse_scaled_svar_var
   --           _ = moment (X (Fin.last n)) 1 P
   --           := by simp only
   --         · skip
-
+  --
   -- simp only [Nat.cast_add, Nat.cast_one]
   -- let Xi : Ω → ℝ := X (Fin.last n)
   -- have hXi : Xi = X (Fin.last n) := by rfl
   -- simp_rw [<- hXi]
-
+  --
   -- simp only [one_mul]
   -- conv in (((↑n + 1) * moment Xi 4 P + (↑n + 1) * ↑n * moment Xi 2 P ^ 2) / (↑n + 1) ^ 2) => rw [add_div]
   -- conv in ((↑n + 1) * moment Xi 4 P / (↑n + 1) ^ 2) => rw [mul_comm, <- mul_div]
@@ -476,12 +597,11 @@ theorem mse_scaled_svar_var
   --     linarith only []
   --   _ = (1 / (n + 1))
   --   := by simp only [pow_zero, pow_one, one_div]
-
+  --
   -- simp_rw [mul_add, add_mul, mul_sub, sub_mul, add_div, one_mul]
   -- simp_rw [mul_add, add_mul, mul_sub, sub_mul]
   -- simp_rw [mul_add, add_mul]
-
-
+  --
   -- rw [mul_add, add_div, add_div, add_mul, add_mul, add_mul, add_mul, add_mul, mul_sub, mul_sub, sub_mul]
   -- simp only [one_mul]
   -- rw [mul_add, add_mul, mul_sub, mul_add, sub_mul, add_mul, sub_mul, add_div, mul_add, add_mul]
