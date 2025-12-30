@@ -147,7 +147,7 @@ private theorem moment_1_scaled_svar
   {n : ℕ}
   {X : Fin (n + 1) → Ω → ℝ}
   {P : Measure Ω} [IsProbabilityMeasure P]
-  (hX : ∀ i, MemLp (X i) 4 P)
+  (hX : ∀ i, MemLp (X i) 2 P)
   (hXIntegrable : (i : Fin (n + 1)) → Integrable (X i) P)
   (hXIndep : iIndepFun X P)
   (hXIdent : (i j : Fin (n + 1)) → IdentDistrib (X i) (X j) P P)
@@ -223,14 +223,7 @@ private theorem moment_1_scaled_svar
   conv =>
     enter [1, 2, 1, 2, ω]
     rw [<- sum_apply, <- Pi.pow_apply]
-  rw [<- moment, _2_moment_sum ?hX hXIndep hXIdent, mul_assoc, <- mul_add, mul_comm, <- mul_div]
-  case hX =>
-    intro i
-    apply MemLp.mono_exponent (hX i)
-    rw [Nat.ofNat_le]
-    apply Nat.succ_le_succ
-    apply Nat.succ_le_succ
-    apply zero_le
+  rw [<- moment, _2_moment_sum hX hXIndep hXIdent, mul_assoc, <- mul_add, mul_comm, <- mul_div]
 
   conv =>
     enter [1, 2, 2]
@@ -246,6 +239,93 @@ private theorem moment_1_scaled_svar
   conv =>
     enter [1, 1]
     rw [mul_comm, mul_div, mul_one]
+
+private theorem moment_2_scaled_svar
+  {Ω : Type u_1} [m : MeasurableSpace Ω]
+  {n : ℕ}
+  {X : Fin (n + 1) → Ω → ℝ}
+  {P : Measure Ω} [IsProbabilityMeasure P]
+  (hX : ∀ i, MemLp (X i) 4 P)
+  (hXIntegrable : (i : Fin (n + 1)) → Integrable (X i) P)
+  (hXIndep : iIndepFun X P)
+  (hXIdent : (i j : Fin (n + 1)) → IdentDistrib (X i) (X j) P P)
+  (k : ℝ)
+  : P[(fun ω => k * biased_svar (fun i => X i ω)) ^ 2]
+    = k ^ 2 * 0
+  := by
+  let Xi : Ω → ℝ := X (Fin.last n)
+  have hXi : Xi = X (Fin.last n) := by rfl
+  -- rw [<- hXi]
+
+  have h1 : @HAdd.hAdd ℝ ℝ ℝ instHAdd (↑n) 1 ≠ 0 := by
+    rw [ne_eq, <- Nat.cast_one, <- Nat.cast_add, @Nat.cast_eq_zero, Nat.add_one, <- ne_eq]
+    apply Nat.succ_ne_zero
+
+  conv in (biased_svar _) => rw [biased_svar_eq_smean_sq_add_sq_smean]
+  unfold smean
+  simp only [Nat.cast_add, Nat.cast_one, Pi.pow_apply]
+
+  conv =>
+    enter [1, 2, ω]
+    rw [mul_pow, sub_sq]
+  rw [integral_const_mul, mul_eq_mul_left_iff]
+  left
+  rw [integral_add ?hf1 ?hg1, integral_sub ?hf2 ?hg2]
+  case hf1 => sorry
+  case hg1 => sorry
+  case hf2 => sorry
+  case hg2 => sorry
+  conv =>
+    enter [1, 1, 1, 2, ω]
+    rw [div_pow]
+    calc
+      @HDiv.hDiv ℝ ℝ ℝ instHDiv ((∑ x, X x ω ^ 2) ^ 2) ((↑n + 1) ^ 2)
+        = @HDiv.hDiv ℝ ℝ ℝ instHDiv ((∑ x, X x ^ 2) ω ^ 2) ((↑n + 1) ^ 2)
+      := by simp?
+      _ = @HDiv.hDiv ℝ ℝ ℝ instHDiv (((∑ x, X x ^ 2) ^ 2) ω) ((↑n + 1) ^ 2)
+      := by simp?
+      _ = @HDiv.hDiv ℝ ℝ ℝ instHDiv (((∑ x, (X ^ 2) x) ^ 2) ω) ((↑n + 1) ^ 2)
+      := by simp?
+  rw [integral_div, <- moment_def, _2_moment_sum ?hX ?hXIndep ?hXIdent]
+  case hX => sorry
+  case hXIndep => sorry
+  case hXIdent => sorry
+  conv =>
+    enter [1, 1, 1, 1]
+    rw [moment_def, moment_def, Pi.pow_apply, <- pow_mul, <- pow_mul]
+    simp only [Nat.reduceMul]
+    rw [<- moment, <- moment, <- hXi]
+  conv =>
+    enter [1, 1, 2, 2, ω]
+    rw [mul_assoc, div_pow, div_mul_div_comm, <- pow_succ']
+    simp only [Nat.reduceAdd]
+  rw [integral_const_mul, integral_div]
+  conv =>
+    enter [1, 2, 2, ω]
+    rw [<- pow_mul, div_pow]
+    simp only [Nat.reduceMul]
+    calc
+      (∑ x, X x ω) ^ 4 / (↑n + 1) ^ 4
+        = (∑ x, X x) ω ^ 4 / (↑n + 1) ^ 4
+      := by simp?
+      _ = (((∑ x, X x) ^ 4) ω) / (↑n + 1) ^ 4
+      := by simp?
+  rw [integral_div, <- moment, _4_moment_sum ?hX ?hXIndep ?hXIdent]
+  case hX => sorry
+  case hXIndep => sorry
+  case hXIdent => sorry
+  rw [<- hXi, one_mul]
+  simp_rw [add_div]
+  conv =>
+    enter [1, 1, 1, 1]
+    rw [mul_comm, <- mul_div, sq, div_mul_eq_div_div, div_self h1, mul_div, mul_one]
+  conv =>
+    enter [1, 1, 1, 2]
+    rw [mul_assoc, mul_comm, <- mul_div, sq (_ + 1), div_mul_eq_div_div, div_self h1,
+      mul_div, mul_one]
+  simp_rw [add_assoc]
+
+  sorry
 
 theorem mse_scaled_svar_var
   {Ω : Type u_1} [m : MeasurableSpace Ω]
