@@ -10,18 +10,24 @@ open Finset BigOperators
 
 theorem sum_sq_eq
   {R : Type u_1} [Field R]
-  {n : ℕ}
-  {f : Fin n → R}
-  : (∑ i, f i) ^ 2 = ∑ i, (f i) ^ 2 + ∑ i, ∑ j ∈ Finset.univ.erase i, f i * f j
+  {ι : Type u_2} [DecidableEq ι]
+  {s : Finset ι}
+  {f : ι → R}
+  : (∑ i ∈ s, f i) ^ 2 = ∑ i ∈ s, (f i) ^ 2 + ∑ i ∈ s, ∑ j ∈ s.erase i, f i * f j
   := by
   rw [sq, sum_mul]
-  conv in (fun i => @HMul.hMul R R R instHMul (f i) (∑ i, f i)) =>
-    intro i
+  conv =>
+    enter [1, 2, i]
     rw [mul_sum]
 
-  simp only [mem_univ, sum_erase_eq_sub, sum_sub_distrib]
-  conv in (fun i => f i * f i) => intro i; rw [<- sq]
-  rw [add_sub, add_comm, <- add_sub, sub_self, add_zero]
+  conv_rhs =>
+    enter [2]
+    apply_congr
+    · skip
+    · rw [sum_erase_eq_sub (by assumption)]
+
+  conv in (fun i => _ - f i * f i) => intro i; rw [<- sq]
+  rw [sum_sub_distrib, add_sub, add_comm, <- add_sub, sub_self, add_zero]
 
 theorem sum2_ne_symm
   {R1 : Type u_1}
