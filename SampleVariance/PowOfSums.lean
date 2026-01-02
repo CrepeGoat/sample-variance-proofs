@@ -29,16 +29,22 @@ theorem sum_sq_eq
   conv in (fun i => _ - f i * f i) => intro i; rw [<- sq]
   rw [sum_sub_distrib, add_sub, add_comm, <- add_sub, sub_self, add_zero]
 
-theorem sum2_ne_symm
-  {R1 : Type u_1}
-  {R2 : Type u_2} [AddCommMonoid R2]
-  {n : ℕ}
-  (s : Finset (Fin n))
-  (f g : Fin n → R1)
-  (h : R1 → R1 → R2)
-  : ∑ i ∈ s, ∑ j ∈ s.erase i, h (f i) (g j) = ∑ i ∈ s, ∑ j ∈ s.erase i, h (g i) (f j)
+theorem sum2_unique_symm
+  {R : Type u_1} [Field R]
+  {ι : Type u_2} [DecidableEq ι]
+  {s : Finset ι}
+  {f : ι → ι → R}
+  : ∑ i ∈ s, ∑ j ∈ s.erase i, f i j = ∑ j ∈ s, ∑ i ∈ s.erase j, f i j
   := by
-  sorry
+  conv_lhs =>
+    apply_congr
+    · skip
+    · rw [sum_erase_eq_sub (by assumption)]
+  conv_rhs =>
+    apply_congr
+    · skip
+    · rw [sum_erase_eq_sub (by assumption)]
+  rw [sum_sub_distrib, sum_sub_distrib, sub_left_inj, @sum_comm]
 
 theorem sum_sq_mul_sq_sum
   {R : Type u_1} [Field R]
@@ -74,9 +80,12 @@ theorem sum_sq_mul_sq_sum
   conv =>
     enter [1, 2, 2, i1]
     rw [mul_sum]
+  conv_lhs =>
+    enter [2]
+    rw [sum2_unique_symm]
   conv =>
-    enter [1, 2]
-    rw [sum2_ne_symm]
+    enter [1, 2, 2, j, 2, i]
+    rw [mul_comm]
   rw [add_left_inj]
 
   conv =>
