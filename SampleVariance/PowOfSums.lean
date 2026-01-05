@@ -1,4 +1,4 @@
--- import Mathlib
+import Mathlib
 import Mathlib.Algebra.Field.Defs
 import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 import Mathlib.Data.Fin.Basic
@@ -55,87 +55,84 @@ theorem sum_sq_mul_sq_sum
     + ∑ i1, ∑ i2 ∈ univ.erase i1, ∑ i3 ∈ (univ.erase i1).erase i2, f i1 * f i2 * f i3 ^ 2
     + 2 * ∑ i1, ∑ i2 ∈ univ.erase i1, f i1 * f i2 ^ 3
   := by
-  rw [sum_sq_eq, mul_add, <- sq, add_assoc, add_right_inj]
-  rw [mul_sum]
-  conv =>
-    enter [1, 2, i1]
-    rw [<- mul_sum, <- mul_assoc]
-  conv =>
-    enter [1, 2, i1, 1]
-    rw [mul_comm]
-  conv =>
-    enter [1, 2, i1]
-    rw [mul_assoc]
 
   conv =>
-    enter [1, 2, i1]
-    rw [<- sum_erase_add Finset.univ (fun i => f i ^ 2) (by exact mem_univ i1)]
-    rw [mul_comm, mul_assoc, add_mul, <- mul_assoc, <- mul_assoc]
-  rw [sum_add_distrib]
+    enter [2, 1, 2, 2, i1]
+    apply_congr
+    · skip
+    · rw [sum_erase_eq_sub (by assumption)]
   conv =>
-    enter [1, 2, 2, i1]
-    rw [mul_comm, <- mul_assoc, <- pow_succ']
+    enter [2, 1, 2, 2, i1]
+    rw [sum_sub_distrib]
+  conv =>
+    enter [2, 1, 2]
+    rw [sum_sub_distrib]
+
+  conv =>
+    enter [2, 1, 2, 1, 2, i1, 2, i2]
+    rw [<- mul_sum]
+  conv =>
+    enter [2, 1, 2, 1, 2, i1]
+    rw [<- sum_mul, <- mul_sum]
+  conv =>
+    enter [2, 1, 2, 1]
+    apply_congr
+    · skip
+    · rw [sum_erase_eq_sub (by assumption)]
+  conv =>
+    enter [2, 1, 2, 1]
+    apply_congr
+    · skip
+    · rw [sum_erase_eq_sub (by assumption)]
+  conv =>
+    enter [2, 1, 2, 1, 2, i1]
+    rw [mul_sub, mul_sub, sub_mul, sub_mul, mul_assoc, mul_assoc, mul_assoc, mul_assoc]
+    rw [<- pow_succ', <- pow_succ']
     simp only [Nat.reduceAdd]
-  rw [two_mul, <- add_assoc]
   conv =>
-    enter [1, 2, 2, i1]
-    rw [mul_sum]
-  conv_lhs =>
-    enter [2]
-    rw [sum2_unique_symm]
+    enter [2, 1, 2, 2, 2, i1, 2, i2]
+    rw [mul_assoc, <- pow_succ']
+    simp only [Nat.reduceAdd]
   conv =>
-    enter [1, 2, 2, j, 2, i]
-    rw [mul_comm]
-  rw [add_left_inj]
-
+    enter [2, 1, 2, 1, 2, i1, 1, 2]
+    rw [<- mul_assoc, <- sq]
   conv =>
-    enter [1, 2, i1]
-    rw [mul_comm]
+    enter [2, 1, 2, 1, 2, i1, 2, 1]
+    rw [mul_comm, mul_assoc, <- pow_succ]
+    simp only [Nat.reduceAdd]
   conv =>
-    enter [1, 2, i1, 2]
-    rw [mul_comm, sum_mul]
-
-  -- conv =>
-  --   enter [1, 2, i1, 2, 2, i2, 2]
-  --   rw [<- sum_erase_add (univ.erase i1) (fun i => f i ^ 2) (by
-  --     simp only [mem_erase, ne_eq, mem_univ, and_true]
-  --     sorry
-  --     )]
-
-
-  -- conv =>
-  --   enter [1, 2, i1, 2, 2, i2]
-  --   rw [<- mul_sum]
-  -- conv =>
-  --   enter [1, 2, i1, 2, 2, i2, 2]
-  --   apply sum_erase_eq_sub (by simp only [mem_univ])
-  -- conv =>
-  --   enter [1, 2, i1, 2, 2, i2]
-  --   rw [mul_sub, <- sq]
-  -- rw [sum_sub_distrib]
-  -- conv =>
-  --   enter [1, 2, i1, 2, 1]
-  --   rw [<- sum_mul, <- sq]
-  -- conv =>
-  --   enter [1, 2, i1]
-  --   rw [mul_sub]
-  -- rw [sum_sub_distrib, <- sum_mul, <- sum_mul, <- mul_sub]
-
-  -- rw [<- sum_erase_eq_sub]
-
-  -- conv in (fun i => f i ^ 2 * ∑ i1, _) =>
-  --   intro i
-  --   rw [sq, mul_assoc, mul_sum]
-  -- conv =>
-  --   enter [1, 2, i, 2, 2, i1]
-  --   rw [mul_sum]
-  -- conv =>
-  --   enter [1, 2, i, 2, 2, i1, 2, i]
-  --   rw [<- mul_assoc]
-
-
-  sorry
-
+    enter [2, 1, 2, 2, 2, i1]
+    rw [<- mul_sum]
+  conv =>
+    enter [2, 1, 2, 2]
+    apply_congr
+    · skip
+    · rw [sum_erase_eq_sub (by assumption)]
+  conv =>
+    enter [2, 1, 2, 2, 2, i1]
+    rw [mul_sub, <- pow_succ']
+    simp only [Nat.reduceAdd]
+  conv =>
+    enter [2, 2, 2]
+    apply_congr
+    · skip
+    · rw [sum_erase_eq_sub (by assumption)]
+  rw [sum_sub_distrib, sum_sub_distrib, sum_sub_distrib, sum_sub_distrib, sum_sub_distrib,
+    <- sum_mul, <- sum_mul, <- sum_mul, <- mul_sum]
+  conv =>
+    enter [2, 2, 2, 1, 2, i1]
+    rw [<- mul_sum]
+  rw [<- sum_mul]
+  conv =>
+    enter [2, 2, 2, 2, 2, i1]
+    rw [<- pow_succ']
+    simp only [Nat.reduceAdd]
+  conv =>
+    enter [2, 1, 2, 1, 1, 1]
+    rw [<- mul_assoc, <- sq, mul_comm]
+  rw [<- sq]
+  rw [sub_sub, <- two_mul, add_assoc, sub_add, sub_self, sub_zero]
+  rw [add_sub, add_comm, <- add_sub, sub_self, add_zero]
 
 theorem pow_sum_castSucc_eq_sum_add_pow
   {R : Type u_1} [CommSemiring R]
