@@ -28,7 +28,7 @@ noncomputable def isum_rv
   -- (hX : (i : Fin n) → Measurable (X i))
   : (Ω → R) := fun (ω : Ω) => (∑ i : Fin n, X i ω)
 
-theorem MemLp.integrable_pow
+private theorem MemLp.integrable_pow
   {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsFiniteMeasure P]
   {f : Ω → ℝ}
   {k : ℕ}
@@ -43,7 +43,7 @@ theorem MemLp.integrable_pow
   exact h.aestronglyMeasurable.pow k
 
 -- https://leanprover.zulipchat.com/#narrow/channel/113489-new-members/topic/stuck.20on.20a.20proof.20on.20probability.20expectations/near/564137993
-theorem k_moment_sum_recursive
+private theorem k_moment_sum_recursive
   {Ω : Type u_1} [m : MeasurableSpace Ω]
   {P : Measure Ω} [IsFiniteMeasure P]
   {n k : ℕ}
@@ -102,7 +102,7 @@ theorem k_moment_sum_recursive
       simp_all only [mem_range, ENNReal.natCast_sub, tsub_le_iff_right, self_le_add_right]
 
 -- https://leanprover.zulipchat.com/#narrow/channel/113489-new-members/topic/stuck.20on.20proof.20for.20iIndepFun.20on.20subset.20of.20indices/near/564583898
-lemma iIndepFun_succ
+private lemma iIndepFun_succ
   {Ω : Type u_1} [MeasurableSpace Ω]
   {P : Measure Ω}
   {n : ℕ}
@@ -112,7 +112,7 @@ lemma iIndepFun_succ
   := by
   exact iIndepFun.precomp (f := X) (Fin.castSucc_injective n) hXIndep
 
-lemma moment_eq_if_identdistrib
+private lemma moment_eq_if_identdistrib
   {Ω : Type u_1} [m : MeasurableSpace Ω]
   {P : Measure Ω} [IsFiniteMeasure P]
   {n k : ℕ}
@@ -124,7 +124,7 @@ lemma moment_eq_if_identdistrib
   have h := IdentDistrib.comp hXIdent (Measurable.pow_const measurable_id k)
   apply h.integral_eq
 
-theorem zero_moment_eq_one
+private theorem zero_moment_eq_one
   {Ω : Type u_1} [m : MeasurableSpace Ω]
   {P : Measure Ω} [mP : IsProbabilityMeasure P]
   (X : Ω → ℝ)
@@ -414,3 +414,73 @@ theorem _4_moment_sum
       one_mul]
 
     linarith
+
+private theorem expt_sum2_unique_mul_eq
+  {Ω : Type u_1} [m : MeasurableSpace Ω]
+  {P : Measure Ω} [mP : IsProbabilityMeasure P]
+  {n : ℕ}
+  {X : Fin (n + 1) → Ω → ℝ}
+  {f g : ℝ → ℝ}
+  (hX : ∀ i, MemLp (X i) 4 P)
+  (hXIndep : iIndepFun X P)
+  (hXIdent : (i j : Fin (n + 1)) → IdentDistrib (X i) (X j) P P)
+  : P[fun ω => ∑ i1 : Fin (n + 1), ∑ i2 ∈ univ.erase i1, f (X i1 ω) * g (X i2 ω)]
+    = (n + 1) * (@Nat.cast ℝ Real.instNatCast n)
+      * P[fun ω => f (X (Fin.last n) ω)]
+      * P[fun ω => g (X (Fin.last n) ω)]
+  := by sorry
+
+theorem expt_sum_sq_mul_sq_sum
+  {Ω : Type u_1} [m : MeasurableSpace Ω]
+  {P : Measure Ω} [mP : IsProbabilityMeasure P]
+  {n : ℕ}
+  {X : Fin (n + 1) → Ω → ℝ}
+  (hX : ∀ i, MemLp (X i) 4 P)
+  (hXIndep : iIndepFun X P)
+  (hXIdent : (i j : Fin (n + 1)) → IdentDistrib (X i) (X j) P P)
+  : P[(∑ i, X i ^ 2) * (∑ i, X i) ^ 2]
+    = P[∑ i, X i ^ 2 ^ 2]
+    + P[∑ i1, ∑ i2 ∈ univ.erase i1, ∑ i3 ∈ (univ.erase i1).erase i2, X i1 * X i2 * X i3 ^ 2]
+    + 2 * P[∑ i1, ∑ i2 ∈ univ.erase i1, X i1 * X i2 ^ 3]
+  := by
+    let X' := fun ω i => X i ω
+    have hX' : X' = fun ω i => X i ω := by rfl
+    calc
+      P[(∑ i, X i ^ 2) * (∑ i, X i) ^ 2]
+        = P[fun ω => (∑ i, X' ω i ^ 2) * (∑ i, X' ω i) ^ 2]
+      := by
+        simp only [hX', Pi.mul_apply, sum_apply, Pi.pow_apply]
+      _ = P[fun ω =>
+        (∑ i, X' ω i ^ 2) ^ 2
+        + ∑ i1, ∑ i2 ∈ univ.erase i1, ∑ i3 ∈ (univ.erase i1).erase i2,
+          X' ω i1 * X' ω i2 * X' ω i3 ^ 2
+        + 2 * ∑ i1, ∑ i2 ∈ univ.erase i1, X' ω i1 * X' ω i2 ^ 3
+      ]
+      := by
+        sorry
+      _ = P[fun ω => (∑ i, X' ω i ^ 2) ^ 2]
+        + P[fun ω => ∑ i1, ∑ i2 ∈ univ.erase i1, ∑ i3 ∈ (univ.erase i1).erase i2,
+          X' ω i1 * X' ω i2 * X' ω i3 ^ 2]
+        + (2 : ℝ) * P[fun ω => ∑ i1, ∑ i2 ∈ univ.erase i1, X' ω i1 * X' ω i2 ^ 3]
+      := by
+        sorry
+      _ = P[(∑ i, X i ^ 2) ^ 2]
+        + P[∑ i1, ∑ i2 ∈ univ.erase i1, ∑ i3 ∈ (univ.erase i1).erase i2, X i1 * X i2 * X i3 ^ 2]
+        + 2 * P[∑ i1, ∑ i2 ∈ univ.erase i1, X i1 * X i2 ^ 3]
+      := by
+        simp?
+        sorry
+      _ = (n + 1) * moment (X (Fin.last n) ^ 2) 2 P
+        + (n + 1) * n * moment (X (Fin.last n) ^ 2) 1 P ^ 2
+        + (n + 1) * n * (n - 1) * moment (X (Fin.last n)) 2 P * moment (X (Fin.last n)) 1 P ^ 2
+        + 2 * (n + 1) * n * moment (X (Fin.last n)) 3 P * moment (X (Fin.last n)) 1 P
+      := by
+        sorry
+      _ = (n + 1) * moment (X (Fin.last n)) 4 P
+        + (n + 1) * n * moment (X (Fin.last n)) 2 P ^ 2
+        + (n + 1) * n * (n - 1) * moment (X (Fin.last n)) 2 P * moment (X (Fin.last n)) 1 P ^ 2
+        + 2 * (n + 1) * n * moment (X (Fin.last n)) 3 P * moment (X (Fin.last n)) 1 P
+      := by
+        sorry
+
+    sorry
