@@ -265,6 +265,37 @@ private theorem moment_1_smean_sq
 
   rw [mul_comm, <- mul_div, Nat.cast_add_one, div_self h1, mul_one]
 
+private theorem moment_2_smean
+  {Ω : Type u_1} [m : MeasurableSpace Ω]
+  {n : ℕ}
+  {X : Fin (n + 1) → Ω → ℝ}
+  {P : Measure Ω} [IsProbabilityMeasure P]
+  (hX : ∀ i, MemLp (X i) 2 P)
+  (hXIndep : iIndepFun X P)
+  (hXIdent : (i j : Fin (n + 1)) → IdentDistrib (X i) (X j) P P)
+  : P[fun ω => (smean fun i ↦ X i ω) ^ 2]
+    = (1 / (n + 1)) * moment (X (Fin.last n)) 2 P
+    + (n / (n + 1)) * moment (X (Fin.last n)) 1 P ^ 2
+  := by
+  unfold smean
+  simp only
+  conv in ((_ / _) ^ 2) => rw [div_pow]
+  rw [integral_div]
+  conv =>
+    enter [1, 1, 2, ω]
+    rw [<- sum_apply, <- Pi.pow_apply]
+  rw [<- moment, _2_moment_sum hX hXIndep hXIdent, mul_assoc, <- mul_add, mul_comm, <- mul_div]
+  simp only [Nat.cast_add, Nat.cast_one]
+  conv in ((↑n + 1) ^ 2) => rw [sq]
+
+  have h1 : @HAdd.hAdd ℝ ℝ ℝ instHAdd (↑n) 1 ≠ 0 := by
+    rw [ne_eq, <- Nat.cast_one, <- Nat.cast_add, @Nat.cast_eq_zero, Nat.add_one, <- ne_eq]
+    apply Nat.succ_ne_zero
+
+  rw [div_mul_eq_div_div, div_self h1, mul_comm, mul_add, add_right_inj]
+  rw [<- mul_assoc]
+  nth_rw 2 [mul_comm]
+  rw [mul_div, mul_one]
 
 private theorem moment_1_biased_svar
   {Ω : Type u_1} [m : MeasurableSpace Ω]
@@ -346,9 +377,7 @@ private theorem moment_1_biased_svar
     rw [<- sum_apply, <- Pi.pow_apply]
   rw [<- moment, _2_moment_sum hX hXIndep hXIdent, mul_assoc, <- mul_add, mul_comm, <- mul_div]
 
-  conv =>
-    enter [1, 2, 2]
-    rw [sq]
+  conv in ((↑n + 1) ^ 2) => rw [sq]
   rw [div_mul_eq_div_div, div_self h1]
   rw [mul_comm]
 
