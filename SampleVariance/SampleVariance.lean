@@ -207,7 +207,6 @@ private theorem moment_1_smean_sq
   {X : Fin (n + 1) → Ω → ℝ}
   {P : Measure Ω} [IsProbabilityMeasure P]
   (hX : ∀ i, MemLp (X i) 2 P)
-  (hXIntegrable : (i : Fin (n + 1)) → Integrable (X i) P)
   (hXIndep : iIndepFun X P)
   (hXIdent : (i j : Fin (n + 1)) → IdentDistrib (X i) (X j) P P)
   : P[fun ω => smean (fun i => X i ω ^ 2)]
@@ -227,7 +226,20 @@ private theorem moment_1_smean_sq
     rw [<- pow_one ((∑ x, X x ^ 2))]
   rw [<- moment_def, _1_moment_sum]
   case hX =>
-    sorry
+    intro i
+    have h3 : (X i ^ 2) = (fun ω => (‖X i ω‖ ^ 2)) := by
+      conv_rhs =>
+        enter [ω]
+        rw [Real.norm_eq_abs, sq_abs, <- Pi.pow_apply]
+    rw [h3]
+    have h4 := MemLp.norm_rpow_div (hX i) 2
+    rw [
+      ENNReal.div_self
+        (by simp only [ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true])
+        (by simp only [ne_eq, ENNReal.ofNat_ne_top, not_false_eq_true]),
+      ENNReal.toReal_ofNat,
+    ] at h4
+    simp_all only [Real.rpow_ofNat]
   case hXIndep =>
     have h2 : ∀ k, (X k ^ 2) = (fun x => x ^ 2) ∘ X k := by
       intro k
