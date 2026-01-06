@@ -8,6 +8,18 @@ import Mathlib.Algebra.BigOperators.Fin
 
 open Finset BigOperators
 
+theorem sum_sq_eq_sum_sum_mul
+  {R : Type u_1} [Field R]
+  {ι : Type u_2} [DecidableEq ι]
+  {s : Finset ι}
+  {f : ι → R}
+  : (∑ i ∈ s, f i) ^ 2 = ∑ i ∈ s, ∑ j ∈ s, f i * f j
+  := by
+  rw [sq, sum_mul]
+  conv =>
+    enter [1, 2, i]
+    rw [mul_sum]
+
 theorem sum_sq_eq
   {R : Type u_1} [Field R]
   {ι : Type u_2} [DecidableEq ι]

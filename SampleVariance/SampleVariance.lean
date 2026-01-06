@@ -315,7 +315,43 @@ private theorem moment_1_biased_svar
   := by
   conv in (biased_svar _) => rw [biased_svar_eq_smean_sq_sub_sq_smean]
   simp only
-  rw [integral_sub (by sorry) (by sorry)]
+  rw [integral_sub ?hInteg1 ?hInteg2]
+  case hInteg1 =>
+    unfold smean
+    simp only [Nat.cast_add, Nat.cast_one]
+    apply Integrable.div_const
+    apply integrable_finset_sum; intro i hi
+    conv =>
+      enter [1, ω]
+      rw [<- Pi.pow_apply]
+    rw [<- memLp_one_iff_integrable]
+
+    have h3 : (X i ^ 2) = (fun ω => (‖X i ω‖ ^ 2)) := by
+      conv_rhs =>
+        enter [ω]
+        rw [Real.norm_eq_abs, sq_abs, <- Pi.pow_apply]
+    rw [h3]
+    have h4 := MemLp.norm_rpow_div (hX i) 2
+    rw [
+      ENNReal.div_self
+        (by simp only [ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true])
+        (by simp only [ne_eq, ENNReal.ofNat_ne_top, not_false_eq_true]),
+      ENNReal.toReal_ofNat,
+    ] at h4
+    simp_all only [Real.rpow_ofNat]
+  case hInteg2 =>
+    unfold smean
+    conv in ((_ / _) ^ 2) => rw [div_pow, sum_sq_eq_sum_sum_mul]
+    apply Integrable.div_const
+    apply integrable_finset_sum; intro i hi
+    apply integrable_finset_sum;  intro j hj
+    conv =>
+      enter [1, ω]
+      rw [<- Pi.mul_apply]
+    rw [<- memLp_one_iff_integrable]
+
+    rw?
+    sorry
   rw [moment_2_smean hX hXIndep hXIdent, moment_1_smean_sq hX hXIndep hXIdent]
   rw [mul_sub, <- sub_sub, sub_left_inj]
   nth_rw 1 [<- one_mul (moment (X (Fin.last n)) 2 P)]
