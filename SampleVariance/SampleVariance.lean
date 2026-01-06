@@ -201,7 +201,7 @@ theorem mse_eq
   rw [<- sub_eq_iff_eq_add.mp]
   rw [variance_eq_sub hXm2]
 
-private theorem moment_1_scaled_svar
+private theorem moment_1_biased_svar
   {Ω : Type u_1} [m : MeasurableSpace Ω]
   {n : ℕ}
   {X : Fin (n + 1) → Ω → ℝ}
@@ -210,9 +210,8 @@ private theorem moment_1_scaled_svar
   (hXIntegrable : (i : Fin (n + 1)) → Integrable (X i) P)
   (hXIndep : iIndepFun X P)
   (hXIdent : (i j : Fin (n + 1)) → IdentDistrib (X i) (X j) P P)
-  (k : ℝ)
-  : P[fun ω => k * biased_svar (fun i => X i ω)]
-    = k * (↑n / (↑n + 1)) * (
+  : P[fun ω => biased_svar (fun i => X i ω)]
+    = (↑n / (↑n + 1)) * (
       moment (X (Fin.last n)) 2 P
       - moment (X (Fin.last n)) 1 P ^ 2
     )
@@ -228,11 +227,9 @@ private theorem moment_1_scaled_svar
   unfold smean
   simp only [Nat.cast_add, Nat.cast_one]
 
-  rw [integral_const_mul, integral_sub, integral_div]
+  rw [integral_sub, integral_div]
   case hf => sorry
   case hg => sorry
-  rw [mul_assoc, mul_right_inj' ?hkneq0]
-  case hkneq0 => sorry
   conv =>
     enter [1, 2, 2, ω]
     rw [div_pow]
@@ -298,6 +295,26 @@ private theorem moment_1_scaled_svar
   conv =>
     enter [1, 1]
     rw [mul_comm, mul_div, mul_one]
+
+example
+  {Ω : Type u_1} [m : MeasurableSpace Ω]
+  {n : ℕ}
+  {X : Fin (n + 1) → Ω → ℝ}
+  {P : Measure Ω} [IsProbabilityMeasure P]
+  (hX : ∀ i, MemLp (X i) 2 P)
+  (hXIntegrable : (i : Fin (n + 1)) → Integrable (X i) P)
+  (hXIndep : iIndepFun X P)
+  (hXIdent : (i j : Fin (n + 1)) → IdentDistrib (X i) (X j) P P)
+  (k : ℝ)
+  : P[fun ω => k * biased_svar (fun i => X i ω)]
+    = k * (↑n / (↑n + 1)) * (
+      moment (X (Fin.last n)) 2 P
+      - moment (X (Fin.last n)) 1 P ^ 2
+    )
+  := by
+  rw [integral_const_mul, mul_assoc, mul_eq_mul_left_iff]
+  left
+  apply moment_1_biased_svar hX hXIntegrable hXIndep hXIdent
 
 private theorem moment_2_scaled_svar
   {Ω : Type u_1} [m : MeasurableSpace Ω]
