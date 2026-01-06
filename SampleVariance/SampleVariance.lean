@@ -226,8 +226,20 @@ private theorem moment_1_smean_sq
     enter [1, 1, 2, ω]
     rw [<- pow_one ((∑ x, X x ^ 2))]
   rw [<- moment_def, _1_moment_sum]
-  case hX => sorry
-  case hXIndep => sorry
+  case hX =>
+    sorry
+  case hXIndep =>
+    have h2 : ∀ k, (X k ^ 2) = (fun x => x ^ 2) ∘ X k := by
+      intro k
+      unfold Function.comp
+      simp only
+      rw [@Pi.pow_def]
+    conv =>
+      enter [1, i]
+      rw [h2]
+    apply iIndepFun.comp hXIndep
+    intro i
+    apply Measurable.pow (by exact measurable_id) (by exact measurable_const)
   case hXIdent =>
     intro i j
     have h2 : ∀ k, (X k ^ 2) = (fun x => x ^ 2) ∘ X k := by
