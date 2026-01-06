@@ -64,6 +64,65 @@ theorem biased_svar_eq_smean_sq_add_sq_smean
     rw [mul_left_inj' h2]
     simp_all only [ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, pow_eq_zero_iff, div_self]
 
+noncomputable def unbiased_svar
+  {R : Type u_1} [Field R]
+  {n : ℕ}
+  (X : Fin n → R)
+  : R := (∑ i : Fin n, ((X i - smean X) ^ 2)) / (n - 1)
+
+theorem unbiased_svar_eq_mul_biased_svar
+  {n : ℕ}
+  (X : Fin (n + 2) → ℝ)
+  : unbiased_svar X = (n + 2) / (n + 1) * biased_svar X
+  := by
+  have h : ∀ m, @Nat.cast ℝ Real.instRing.toAddGroupWithOne.toNatCast m + 1 ≠ 0 := by
+    intro m
+    rw [<- Nat.cast_add_one, Nat.cast_ne_zero, ne_eq, Nat.add_eq_zero]
+    simp only [one_ne_zero, and_false, not_false_eq_true]
+
+  unfold unbiased_svar biased_svar
+  simp only [Nat.cast_add, Nat.cast_ofNat]
+  rw [mul_div, div_eq_div_iff ?h1 ?h2]
+  case h1 =>
+    rw [<- add_sub, <- one_add_one_eq_two, <- add_sub, sub_self, add_zero]
+    exact h n
+  case h2 =>
+    rw [<- one_add_one_eq_two, <- add_assoc, <- Nat.cast_add_one]
+    exact h (n + 1)
+  conv_rhs =>
+    rw [mul_comm, <- mul_assoc]
+  conv =>
+    enter [2, 1]
+    rw [mul_div, mul_comm, <- mul_div, <- add_sub, <- one_add_one_eq_two, <- add_sub, sub_self,
+      add_zero, one_add_one_eq_two, div_self (h n), mul_one]
+  rw [mul_comm]
+
+theorem biased_svar_eq_mul_unbiased_svar
+  {R : Type u_1} [Field R]
+  {n : ℕ}
+  (X : Fin (n + 2) → ℝ)
+  : biased_svar X = (n + 1) / (n + 2) * unbiased_svar X
+  := by
+  rw [unbiased_svar_eq_mul_biased_svar, eq_comm, <- mul_assoc]
+  nth_rw 2 [<- one_mul (biased_svar X)]
+  rw [mul_eq_mul_right_iff]
+  left
+  rw [div_mul_div_comm, mul_comm, div_self ?h1]
+
+  have h : ∀ m, @Nat.cast ℝ Real.instRing.toAddGroupWithOne.toNatCast m + 1 ≠ 0 := by
+    intro m
+    rw [<- Nat.cast_add_one, Nat.cast_ne_zero, ne_eq, Nat.add_eq_zero]
+    simp only [one_ne_zero, and_false, not_false_eq_true]
+
+  case h1 =>
+    rw [mul_ne_zero_iff]
+    constructor
+    case right =>
+      exact h n
+    case left =>
+      rw [<- one_add_one_eq_two, <- add_assoc, <- Nat.cast_add_one]
+      exact h (n + 1)
+
 noncomputable def bias
   {Ω : Type u_2} [MeasurableSpace Ω]
   (X : Ω → ℝ)
