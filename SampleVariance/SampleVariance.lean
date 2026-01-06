@@ -210,7 +210,7 @@ private theorem moment_1_smean_sq
   (hXIndep : iIndepFun X P)
   (hXIdent : (i j : Fin (n + 1)) → IdentDistrib (X i) (X j) P P)
   : P[fun ω => smean (fun i => X i ω ^ 2)]
-    = moment (X (Fin.last n) ^ 2) 1 P
+    = moment (X (Fin.last n)) 2 P
   := by
   have h1 : @HAdd.hAdd ℝ ℝ ℝ instHAdd (↑n) 1 ≠ 0 := by
     rw [ne_eq, <- Nat.cast_one, <- Nat.cast_add, @Nat.cast_eq_zero, Nat.add_one, <- ne_eq]
@@ -264,6 +264,7 @@ private theorem moment_1_smean_sq
     apply Measurable.pow (by exact measurable_id) (by exact measurable_const)
 
   rw [mul_comm, <- mul_div, Nat.cast_add_one, div_self h1, mul_one]
+  rw [moment, <- pow_mul, <- moment]
 
 private theorem moment_2_smean
   {Ω : Type u_1} [m : MeasurableSpace Ω]
@@ -312,83 +313,23 @@ private theorem moment_1_biased_svar
       - moment (X (Fin.last n)) 1 P ^ 2
     )
   := by
-  let Xi : Ω → ℝ := X (Fin.last n)
-  have hXi : Xi = X (Fin.last n) := by rfl
+  conv in (biased_svar _) => rw [biased_svar_eq_smean_sq_sub_sq_smean]
+  simp only
+  rw [integral_sub (by sorry) (by sorry)]
+  rw [moment_2_smean hX hXIndep hXIdent, moment_1_smean_sq hX hXIndep hXIdent]
+  rw [mul_sub, <- sub_sub, sub_left_inj]
+  nth_rw 1 [<- one_mul (moment (X (Fin.last n)) 2 P)]
 
-  have h1 : @HAdd.hAdd ℝ ℝ ℝ instHAdd (↑n) 1 ≠ 0 := by
+  let mX := moment (X (Fin.last n)) 2 P
+  have hmX : mX = moment (X (Fin.last n)) 2 P := by rfl
+  rw [<- hmX]
+
+  rw [<- sub_mul, mul_eq_mul_right_iff]
+  left
+  rw [<- sub_eq_zero, sub_sub, <- add_div, add_comm, div_self ?h1, sub_self]
+  case h1 =>
     rw [ne_eq, <- Nat.cast_one, <- Nat.cast_add, @Nat.cast_eq_zero, Nat.add_one, <- ne_eq]
     apply Nat.succ_ne_zero
-
-  conv in (biased_svar _) => rw [biased_svar_eq_smean_sq_sub_sq_smean]
-  unfold smean
-  simp only [Nat.cast_add, Nat.cast_one]
-
-  rw [integral_sub, integral_div]
-  case hf => sorry
-  case hg => sorry
-  conv =>
-    enter [1, 2, 2, ω]
-    rw [div_pow]
-  rw [integral_div]
-  conv =>
-    enter [1, 1, 1]
-    calc
-      ∫ (a : Ω), ∑ x, X x a ^ 2 ∂P
-        = ∫ (a : Ω), ∑ x, (X x ^ 2) a ∂P
-      := by simp only [Pi.pow_apply]
-      _ = ∫ (a : Ω), ((∑ x, X x ^ 2) ^ 1) a ∂P
-      := by simp only [Pi.pow_apply, sum_apply, pow_one]
-  rw [<- moment, _1_moment_sum, mul_comm, <- mul_div, div_self h1, mul_one]
-  case hX =>
-    intro i
-      -- rw [sq, <- RCLike.normSq_to_real]
-    -- calc
-    --   MemLp (X i ^ 2) 1 P
-    --     = MemLp (fun ω => (X i ω) ^ 2) 1 P
-    --   := by sorry
-    --   _ = MemLp (fun ω => ‖(X i ω) ^ 2‖) 1 P
-    --   := by
-    --     rw [memLp_norm_iff ?hX2]
-    --     case hX2 => sorry
-    --   _ = MemLp (fun ω => ‖(X i ω)‖ ^ 2) 1 P
-    --   := by
-    --     simp only [norm_pow, Real.norm_eq_abs, sq_abs]
-    --   _ = MemLp (fun ω => ‖(X i ω)‖ ^ 1) 2 P
-    --   := by
-    --     -- rw [<- MemLp.norm_rpow_div]
-    --     sorry
-    --   _ = MemLp (X i) 2 P
-    --   := by
-    --     simp only [Real.norm_eq_abs, pow_one, eq_iff_iff]
-    --     sorry
-    sorry
-  case hXIndep => sorry
-  case hXIdent =>
-    sorry
-  rw [moment]
-  conv =>
-    enter[1, 1, 2, x]
-    rw [<- pow_mul]
-    simp only [Nat.reduceMul]
-  rw [<- moment]
-
-  conv =>
-    enter [1, 2, 1, 2, ω]
-    rw [<- sum_apply, <- Pi.pow_apply]
-  rw [<- moment, _2_moment_sum hX hXIndep hXIdent, mul_assoc, <- mul_add, mul_comm, <- mul_div]
-
-  conv in ((↑n + 1) ^ 2) => rw [sq]
-  rw [div_mul_eq_div_div, div_self h1]
-  rw [mul_comm]
-
-  rw [<- hXi]
-  nth_rw 1 [<- one_mul (moment Xi 2 P)]
-  rw [mul_add, <- sub_sub, <- sub_mul, sub_div' h1, one_mul, <- add_sub, sub_self, add_zero]
-  rw [mul_sub, sub_right_inj]
-  rw [<- mul_assoc]
-  conv =>
-    enter [1, 1]
-    rw [mul_comm, mul_div, mul_one]
 
 example
   {Ω : Type u_1} [m : MeasurableSpace Ω]
