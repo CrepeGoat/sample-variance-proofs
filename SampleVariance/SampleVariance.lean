@@ -201,6 +201,47 @@ theorem mse_eq
   rw [<- sub_eq_iff_eq_add.mp]
   rw [variance_eq_sub hXm2]
 
+private theorem moment_1_smean_sq
+  {Ω : Type u_1} [m : MeasurableSpace Ω]
+  {n : ℕ}
+  {X : Fin (n + 1) → Ω → ℝ}
+  {P : Measure Ω} [IsProbabilityMeasure P]
+  (hX : ∀ i, MemLp (X i) 2 P)
+  (hXIntegrable : (i : Fin (n + 1)) → Integrable (X i) P)
+  (hXIndep : iIndepFun X P)
+  (hXIdent : (i j : Fin (n + 1)) → IdentDistrib (X i) (X j) P P)
+  : P[fun ω => smean (fun i => X i ω ^ 2)]
+    = moment (X (Fin.last n) ^ 2) 1 P
+  := by
+  have h1 : @HAdd.hAdd ℝ ℝ ℝ instHAdd (↑n) 1 ≠ 0 := by
+    rw [ne_eq, <- Nat.cast_one, <- Nat.cast_add, @Nat.cast_eq_zero, Nat.add_one, <- ne_eq]
+    apply Nat.succ_ne_zero
+
+  unfold smean
+  rw [integral_div]
+  have step1 : (∫ (a : Ω), ∑ x, X x a ^ 2 ∂P) = (∫ (a : Ω), (∑ x, X x ^ 2) a ∂P) := by
+    simp only [sum_apply, Pi.pow_apply]
+  rw [step1]
+  conv =>
+    enter [1, 1, 2, ω]
+    rw [<- pow_one ((∑ x, X x ^ 2))]
+  rw [<- moment_def, _1_moment_sum]
+  case hX => sorry
+  case hXIndep => sorry
+  case hXIdent =>
+    intro i j
+    have h2 : ∀ k, (X k ^ 2) = (fun x => x ^ 2) ∘ X k := by
+      intro k
+      unfold Function.comp
+      simp only
+      rw [@Pi.pow_def]
+    rw [h2, h2]
+    apply IdentDistrib.comp (hXIdent i j)
+    apply Measurable.pow (by exact measurable_id) (by exact measurable_const)
+
+  rw [mul_comm, <- mul_div, Nat.cast_add_one, div_self h1, mul_one]
+
+
 private theorem moment_1_biased_svar
   {Ω : Type u_1} [m : MeasurableSpace Ω]
   {n : ℕ}
