@@ -227,19 +227,8 @@ private theorem moment_1_smean_sq
   rw [<- moment_def, _1_moment_sum]
   case hX =>
     intro i
-    have h3 : (X i ^ 2) = (fun ω => (‖X i ω‖ ^ 2)) := by
-      conv_rhs =>
-        enter [ω]
-        rw [Real.norm_eq_abs, sq_abs, <- Pi.pow_apply]
-    rw [h3]
-    have h4 := MemLp.norm_rpow_div (hX i) 2
-    rw [
-      ENNReal.div_self
-        (by simp only [ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true])
-        (by simp only [ne_eq, ENNReal.ofNat_ne_top, not_false_eq_true]),
-      ENNReal.toReal_ofNat,
-    ] at h4
-    simp_all only [Real.rpow_ofNat]
+    rw [memLp_one_iff_integrable]
+    apply MemLp.integrable_sq (hX i)
   case hXIndep =>
     have h2 : ∀ k, (X k ^ 2) = (fun x => x ^ 2) ∘ X k := by
       intro k
@@ -304,7 +293,6 @@ private theorem moment_1_biased_svar
   {X : Fin (n + 1) → Ω → ℝ}
   {P : Measure Ω} [IsProbabilityMeasure P]
   (hX : ∀ i, MemLp (X i) 2 P)
-  (hXIntegrable : (i : Fin (n + 1)) → Integrable (X i) P)
   (hXIndep : iIndepFun X P)
   (hXIdent : (i j : Fin (n + 1)) → IdentDistrib (X i) (X j) P P)
   : P[fun ω => biased_svar (fun i => X i ω)]
@@ -324,21 +312,7 @@ private theorem moment_1_biased_svar
     conv =>
       enter [1, ω]
       rw [<- Pi.pow_apply]
-    rw [<- memLp_one_iff_integrable]
-
-    have h3 : (X i ^ 2) = (fun ω => (‖X i ω‖ ^ 2)) := by
-      conv_rhs =>
-        enter [ω]
-        rw [Real.norm_eq_abs, sq_abs, <- Pi.pow_apply]
-    rw [h3]
-    have h4 := MemLp.norm_rpow_div (hX i) 2
-    rw [
-      ENNReal.div_self
-        (by simp only [ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true])
-        (by simp only [ne_eq, ENNReal.ofNat_ne_top, not_false_eq_true]),
-      ENNReal.toReal_ofNat,
-    ] at h4
-    simp_all only [Real.rpow_ofNat]
+    apply MemLp.integrable_sq (hX i)
   case hInteg2 =>
     unfold smean
     conv in ((_ / _) ^ 2) => rw [div_pow, sum_sq_eq_sum_sum_mul]
@@ -348,10 +322,8 @@ private theorem moment_1_biased_svar
     conv =>
       enter [1, ω]
       rw [<- Pi.mul_apply]
-    rw [<- memLp_one_iff_integrable]
-
-    rw?
-    sorry
+    -- https://leanprover.zulipchat.com/#narrow/channel/113489-new-members/topic/ISO.20help.20with.20theorem.20using.20MemLp.20and.20IdentDistrib/near/566627078
+    apply MemLp.integrable_mul (hX i) (hX j)
   rw [moment_2_smean hX hXIndep hXIdent, moment_1_smean_sq hX hXIndep hXIdent]
   rw [mul_sub, <- sub_sub, sub_left_inj]
   nth_rw 1 [<- one_mul (moment (X (Fin.last n)) 2 P)]
@@ -385,7 +357,8 @@ example
   := by
   rw [integral_const_mul, mul_assoc, mul_eq_mul_left_iff]
   left
-  apply moment_1_biased_svar hX hXIntegrable hXIndep hXIdent
+  -- apply moment_1_biased_svar hX hXIntegrable hXIndep hXIdent
+  sorry
 
 private theorem moment_2_scaled_svar
   {Ω : Type u_1} [m : MeasurableSpace Ω]
