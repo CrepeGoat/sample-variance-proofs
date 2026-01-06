@@ -25,7 +25,7 @@ noncomputable def biased_svar
   (X : Fin n → R)
   : R := (∑ i : Fin n, ((X i - smean X) ^ 2)) / n
 
-theorem biased_svar_eq_smean_sq_add_sq_smean
+theorem biased_svar_eq_smean_sq_sub_sq_smean
   {n : ℕ}
   (X : Fin (n + 1) → ℝ)
   : biased_svar X = smean (fun i => X i ^ 2) - smean X ^ 2
@@ -164,7 +164,7 @@ theorem bias_eq_sub
 --     · congr
 --       · skip
 --       · ext ω
---         rw [biased_svar_eq_smean_sq_add_sq_smean]
+--         rw [biased_svar_eq_smean_sq_sub_sq_smean]
 --     · skip
 
 --   rw [sub_eq_iff_eq_add', neg_div, neg_mul, <- sub_eq_add_neg]
@@ -223,7 +223,7 @@ private theorem moment_1_biased_svar
     rw [ne_eq, <- Nat.cast_one, <- Nat.cast_add, @Nat.cast_eq_zero, Nat.add_one, <- ne_eq]
     apply Nat.succ_ne_zero
 
-  conv in (biased_svar _) => rw [biased_svar_eq_smean_sq_add_sq_smean]
+  conv in (biased_svar _) => rw [biased_svar_eq_smean_sq_sub_sq_smean]
   unfold smean
   simp only [Nat.cast_add, Nat.cast_one]
 
@@ -340,7 +340,7 @@ private theorem moment_2_scaled_svar
     rw [ne_eq, <- Nat.cast_one, <- Nat.cast_add, @Nat.cast_eq_zero, Nat.add_one, <- ne_eq]
     apply Nat.succ_ne_zero
 
-  conv in (biased_svar _) => rw [biased_svar_eq_smean_sq_add_sq_smean]
+  conv in (biased_svar _) => rw [biased_svar_eq_smean_sq_sub_sq_smean]
   unfold smean
   simp only [Nat.cast_add, Nat.cast_one, Pi.pow_apply]
 
@@ -525,8 +525,8 @@ theorem mse_scaled_svar_var
   have hXi : Xi = X (Fin.last n) := by rfl
   rw [<- hXi]
 
-  conv in (biased_svar _) => rw [biased_svar_eq_smean_sq_add_sq_smean]
-  conv in (biased_svar _) => rw [biased_svar_eq_smean_sq_add_sq_smean]
+  conv in (biased_svar _) => rw [biased_svar_eq_smean_sq_sub_sq_smean]
+  conv in (biased_svar _) => rw [biased_svar_eq_smean_sq_sub_sq_smean]
   unfold smean
   simp only [Pi.pow_apply]
   rw [variance_eq_sub ?hMemLp]
@@ -606,7 +606,7 @@ theorem mse_scaled_svar_var
   --         congr
   --         · skip
   --         · congr
-  --           · rw [biased_svar_eq_smean_sq_add_sq_smean]
+  --           · rw [biased_svar_eq_smean_sq_sub_sq_smean]
   --             unfold smean
   --           · skip
   --     · congr
@@ -615,7 +615,7 @@ theorem mse_scaled_svar_var
   --         · congr
   --           · skip
   --           · ext ω
-  --             rw [biased_svar_eq_smean_sq_add_sq_smean]
+  --             rw [biased_svar_eq_smean_sq_sub_sq_smean]
   --             unfold smean
   --       · skip
   --   · skip
