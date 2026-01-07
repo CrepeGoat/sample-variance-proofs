@@ -327,8 +327,8 @@ private theorem moment_2_biased_svar
     = ((↑n + 1) ^ 2 + 1) / (↑n + 1) ^ 3 * moment (X (Fin.last n)) 4 P
       + ↑n / (↑n + 1) * (1 + 3 / (↑n + 1) ^ 2) * moment (X (Fin.last n)) 2 P ^ 2
   := by
-  let Xi : Ω → ℝ := X (Fin.last n)
-  have hXi : Xi = X (Fin.last n) := by rfl
+  -- let Xi : Ω → ℝ := X (Fin.last n)
+  -- have hXi : Xi = X (Fin.last n) := by rfl
   -- rw [<- hXi]
 
   have h1 : @HAdd.hAdd ℝ ℝ ℝ instHAdd (↑n) 1 ≠ 0 := by
@@ -343,8 +343,21 @@ private theorem moment_2_biased_svar
     rw [mul_assoc]
     simp only [Nat.reduceMul]
   rw [integral_sub ?hf2 ?hg2, integral_add ?hf1 ?hg1, integral_const_mul]
-  case hf1 => sorry
-  case hg1 => sorry
+  case hf1 =>
+    unfold smean
+    conv in (_ ^ 2) => rw [div_pow]
+    apply Integrable.div_const
+    conv in (_ ^ 2) => rw [sum_sq_eq_sum_sum_mul]
+    apply integrable_finset_sum; intro i hi
+    apply integrable_finset_sum; intro j hj
+    conv in (X _ _ ^ 2) => rw [<- Pi.pow_apply]
+    conv in (X _ _ ^ 2) => rw [<- Pi.pow_apply]
+    conv in (_ * _) => rw [<- Pi.mul_apply]
+    -- apply MemLp.integrable_mul
+    rw [<- memLp_one_iff_integrable]
+    sorry
+  case hg1 =>
+    sorry
   case hf2 => sorry
   case hg2 => sorry
 
@@ -356,7 +369,9 @@ private theorem moment_2_biased_svar
   case hX =>
     intro i
     apply MemLp.mono_exponent (hX i) _
-    sorry
+    rw [Nat.ofNat_le, @Nat.add_one_le_add_one_iff, @Nat.add_one_le_add_one_iff]
+    simp only [zero_le]
+
   --------------------------------------
   -- simp only [Nat.cast_add, Nat.cast_one, Pi.pow_apply]
 
