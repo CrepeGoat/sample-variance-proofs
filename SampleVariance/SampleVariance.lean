@@ -274,7 +274,46 @@ example
   -- apply moment_1_biased_svar hX hXIntegrable hXIndep hXIdent
   sorry
 
-private theorem moment_2_scaled_svar
+private theorem moment_2_smean_sq
+  {Ω : Type u_1} [m : MeasurableSpace Ω]
+  {n : ℕ}
+  {X : Fin (n + 1) → Ω → ℝ}
+  {P : Measure Ω} [IsProbabilityMeasure P]
+  (hX : ∀ i, MemLp (X i) 4 P)
+  (hXIndep : iIndepFun X P)
+  (hXIdent : (i j : Fin (n + 1)) → IdentDistrib (X i) (X j) P P)
+  : P[fun ω => (smean fun i ↦ X i ω ^ 2) ^ 2]
+    = 0
+  := by
+  sorry
+
+private theorem moment_4_smean
+  {Ω : Type u_1} [m : MeasurableSpace Ω]
+  {n : ℕ}
+  {X : Fin (n + 1) → Ω → ℝ}
+  {P : Measure Ω} [IsProbabilityMeasure P]
+  (hX : ∀ i, MemLp (X i) 4 P)
+  (hXIndep : iIndepFun X P)
+  (hXIdent : (i j : Fin (n + 1)) → IdentDistrib (X i) (X j) P P)
+  : P[fun ω => (smean fun i ↦ X i ω) ^ 4]
+    = 0
+  := by
+  sorry
+
+private theorem comoment_2_smean_1_smean_sq
+  {Ω : Type u_1} [m : MeasurableSpace Ω]
+  {n : ℕ}
+  {X : Fin (n + 1) → Ω → ℝ}
+  {P : Measure Ω} [IsProbabilityMeasure P]
+  (hX : ∀ i, MemLp (X i) 2 P)
+  (hXIndep : iIndepFun X P)
+  (hXIdent : (i j : Fin (n + 1)) → IdentDistrib (X i) (X j) P P)
+  : P[fun ω => (smean fun i ↦ X i ω ^ 2) * (smean fun i ↦ X i ω) ^ 2]
+    = 0
+  := by
+  sorry
+
+private theorem moment_2_biased_svar
   {Ω : Type u_1} [m : MeasurableSpace Ω]
   {n : ℕ}
   {X : Fin (n + 1) → Ω → ℝ}
@@ -284,11 +323,9 @@ private theorem moment_2_scaled_svar
   (hXIndep : iIndepFun X P)
   (hXIdent : (i j : Fin (n + 1)) → IdentDistrib (X i) (X j) P P)
   (k : ℝ)
-  : P[(fun ω => k * biased_svar (fun i => X i ω)) ^ 2]
-    = k ^ 2 * (
-      ((↑n + 1) ^ 2 + 1) / (↑n + 1) ^ 3 * moment (X (Fin.last n)) 4 P
+  : P[(fun ω => biased_svar (fun i => X i ω)) ^ 2]
+    = ((↑n + 1) ^ 2 + 1) / (↑n + 1) ^ 3 * moment (X (Fin.last n)) 4 P
       + ↑n / (↑n + 1) * (1 + 3 / (↑n + 1) ^ 2) * moment (X (Fin.last n)) 2 P ^ 2
-    )
   := by
   let Xi : Ω → ℝ := X (Fin.last n)
   have hXi : Xi = X (Fin.last n) := by rfl
@@ -299,146 +336,167 @@ private theorem moment_2_scaled_svar
     apply Nat.succ_ne_zero
 
   conv in (biased_svar _) => rw [biased_svar_eq_sub]
-  unfold smean
-  simp only [Nat.cast_add, Nat.cast_one, Pi.pow_apply]
-
+  -- unfold smean
   conv =>
-    enter [1, 2, ω]
-    rw [mul_pow, sub_sq]
-  rw [integral_const_mul, mul_eq_mul_left_iff]
-  left
-  rw [integral_add ?hf1 ?hg1, integral_sub ?hf2 ?hg2]
+    enter [1, 2, x]
+    rw [Pi.pow_apply, sub_sq', <- pow_mul]
+    rw [mul_assoc]
+    simp only [Nat.reduceMul]
+  rw [integral_sub ?hf2 ?hg2, integral_add ?hf1 ?hg1, integral_const_mul]
   case hf1 => sorry
   case hg1 => sorry
   case hf2 => sorry
   case hg2 => sorry
-  conv =>
-    enter [1, 1, 1, 2, ω]
-    rw [div_pow]
-    calc
-      @HDiv.hDiv ℝ ℝ ℝ instHDiv ((∑ x, X x ω ^ 2) ^ 2) ((↑n + 1) ^ 2)
-        = @HDiv.hDiv ℝ ℝ ℝ instHDiv ((∑ x, X x ^ 2) ω ^ 2) ((↑n + 1) ^ 2)
-      := by simp?
-      _ = @HDiv.hDiv ℝ ℝ ℝ instHDiv (((∑ x, X x ^ 2) ^ 2) ω) ((↑n + 1) ^ 2)
-      := by simp?
-      _ = @HDiv.hDiv ℝ ℝ ℝ instHDiv (((∑ x, (X ^ 2) x) ^ 2) ω) ((↑n + 1) ^ 2)
-      := by simp?
-  rw [integral_div, <- moment_def, _2_moment_sum ?hX ?hXIndep ?hXIdent]
-  case hX => sorry
-  case hXIndep => sorry
-  case hXIdent => sorry
-  conv =>
-    enter [1, 1, 1, 1]
-    rw [moment_def, moment_def, Pi.pow_apply, <- pow_mul, <- pow_mul]
-    simp only [Nat.reduceMul]
-    rw [<- moment, <- moment, <- hXi]
-  conv =>
-    enter [1, 1, 2, 2, ω]
-    rw [mul_assoc, div_pow, div_mul_div_comm, <- pow_succ']
-    simp only [Nat.reduceAdd]
-  rw [integral_const_mul, integral_div]
-  conv =>
-    enter [1, 2, 2, ω]
-    rw [<- pow_mul, div_pow]
-    simp only [Nat.reduceMul]
-    calc
-      (∑ x, X x ω) ^ 4 / (↑n + 1) ^ 4
-        = (∑ x, X x) ω ^ 4 / (↑n + 1) ^ 4
-      := by simp?
-      _ = (((∑ x, X x) ^ 4) ω) / (↑n + 1) ^ 4
-      := by simp?
-  rw [integral_div, <- moment, _4_moment_sum ?hX ?hXIndep ?hXIdent]
-  case hX => sorry
-  case hXIndep => sorry
-  case hXIdent => sorry
-  rw [<- hXi, one_mul]
-  simp_rw [add_div]
-  conv =>
-    enter [1, 1, 1, 1]
-    rw [mul_comm, <- mul_div, sq, div_mul_eq_div_div, div_self h1, mul_div, mul_one]
-  conv =>
-    enter [1, 1, 1, 2]
-    rw [mul_assoc, mul_comm, <- mul_div, sq (_ + 1), div_mul_eq_div_div, div_self h1,
-      mul_div, mul_one]
-  simp_rw [add_assoc]
-  rw [add_comm, add_sub, add_comm]
-  simp_rw [add_assoc, <- add_assoc]
-  conv =>
-    enter [1, 1, 1, 1, 1, 1]
-    rw [add_comm, <- add_assoc]
-  conv =>
-    enter [1, 1, 1, 1, 1, 1, 1]
-    calc
-      (↑n + 1) * moment Xi 4 P / (↑n + 1) ^ 4 + moment Xi 4 P / (↑n + 1)
-        = moment Xi 4 P / (↑n + 1) ^ 3 + moment Xi 4 P / (↑n + 1)
-      := by
-        rw [add_left_inj, mul_comm, <- mul_div]
-        nth_rw 2 [div_eq_mul_one_div]
-        rw [mul_eq_mul_left_iff]
-        left
-        rw [pow_succ', div_mul_eq_div_div, div_self h1]
-      _ = moment Xi 4 P * (1 / (↑n + 1) ^ 3 + 1 / (↑n + 1))
-      := by
-        rw [<- mul_one (moment Xi 4 P), <- mul_div, <- mul_div, <- mul_add, mul_one]
-      _ = (((↑n + 1) ^ 2 + 1) / (↑n + 1) ^ 3) * moment Xi 4 P
-      := by
-        rw [mul_comm, mul_eq_mul_right_iff]
-        left
-        nth_rw 1 [pow_succ']
-        rw [div_mul_eq_div_div, div_eq_mul_one_div]
-        nth_rw 2 [<- mul_one (@HDiv.hDiv ℝ ℝ ℝ instHDiv 1 (↑n + 1) : ℝ)]
-        rw [<- mul_add]
-        nth_rw 3 [pow_succ]
-        rw [div_mul_eq_div_div]
-        nth_rw 3 [div_eq_mul_one_div]
-        rw [mul_comm, mul_eq_mul_right_iff]
-        left
-        rw [add_div, <- div_pow, div_self h1, one_pow, add_comm]
-  rw [add_assoc, add_assoc, add_assoc, add_assoc, <- add_sub]
-  nth_rw 1 [add_div]
-  rw [add_right_inj]
 
-  rw [<- add_assoc, <- add_assoc, <- add_assoc]
-  conv =>
-    enter [1, 1, 1, 1, 1]
-    calc
-      ↑n * moment Xi 2 P ^ 2 / (↑n + 1)
-        + 3 * (↑n + 1) * ↑n * moment Xi 2 P ^ 2 / (↑n + 1) ^ 4
-        = ↑n * moment Xi 2 P ^ 2 * (1 / (↑n + 1) + 3 * (↑n + 1) / (↑n + 1) ^ 4)
-      := by
-        rw [mul_assoc]
-        nth_rw 2 [mul_comm]
-        nth_rw 1 [div_eq_mul_one_div]
-        rw [<- mul_div, <- mul_add, mul_eq_mul_left_iff]
-        left
-        simp only [one_div]
-      _ = ↑n / (↑n + 1) * moment Xi 2 P ^ 2 * (1 + 3 * (↑n + 1) / (↑n + 1) ^ 3)
-      := by
-        nth_rw 5 [mul_comm]
-        nth_rw 1 [mul_div]
-        nth_rw 5 [mul_comm]
-        nth_rw 4 [mul_comm]
-        nth_rw 1 [mul_div]
-        nth_rw 4 [mul_comm]
-        nth_rw 2 [<- mul_div]
-        rw [mul_eq_mul_left_iff]
-        left
-        rw [add_div, add_right_inj, <- mul_div, <- mul_div, <- mul_div, mul_eq_mul_left_iff]
-        left
-        rw [div_div, pow_succ]
-      _ = ↑n / (↑n + 1) * moment Xi 2 P ^ 2 * (1 + 3 / (↑n + 1) ^ 2)
-      := by
-        rw [mul_eq_mul_left_iff]
-        left
-        rw [add_right_inj]
-        nth_rw 2 [div_eq_mul_one_div]
-        rw [<- mul_div, mul_eq_mul_left_iff]
-        left
-        rw [pow_succ', div_mul_eq_div_div, div_self h1]
-      _ = ↑n / (↑n + 1) * (1 + 3 / (↑n + 1) ^ 2) * moment Xi 2 P ^ 2
-      := by linarith only []
-  rw [add_assoc, add_assoc, <- add_sub]
-  rw [add_eq_left]
+  rw [
+    moment_2_smean_sq hX hXIndep hXIdent,
+    moment_4_smean hX hXIndep hXIdent,
+    comoment_2_smean_1_smean_sq ?hX hXIndep hXIdent
+  ]
+  case hX =>
+    intro i
+    apply MemLp.mono_exponent (hX i) _
+    sorry
+  --------------------------------------
+  -- simp only [Nat.cast_add, Nat.cast_one, Pi.pow_apply]
+
+  -- conv =>
+  --   enter [1, 2, ω]
+  --   rw [mul_pow, sub_sq]
+  -- rw [integral_const_mul, mul_eq_mul_left_iff]
+  -- left
+  -- rw [integral_add ?hf1 ?hg1, integral_sub ?hf2 ?hg2]
+  -- case hf1 => sorry
+  -- case hg1 => sorry
+  -- case hf2 => sorry
+  -- case hg2 => sorry
+  -- conv =>
+  --   enter [1, 1, 1, 2, ω]
+  --   rw [div_pow]
+  --   calc
+  --     @HDiv.hDiv ℝ ℝ ℝ instHDiv ((∑ x, X x ω ^ 2) ^ 2) ((↑n + 1) ^ 2)
+  --       = @HDiv.hDiv ℝ ℝ ℝ instHDiv ((∑ x, X x ^ 2) ω ^ 2) ((↑n + 1) ^ 2)
+  --     := by simp?
+  --     _ = @HDiv.hDiv ℝ ℝ ℝ instHDiv (((∑ x, X x ^ 2) ^ 2) ω) ((↑n + 1) ^ 2)
+  --     := by simp?
+  --     _ = @HDiv.hDiv ℝ ℝ ℝ instHDiv (((∑ x, (X ^ 2) x) ^ 2) ω) ((↑n + 1) ^ 2)
+  --     := by simp?
+  -- rw [integral_div, <- moment_def, _2_moment_sum ?hX ?hXIndep ?hXIdent]
+  -- case hX => sorry
+  -- case hXIndep => sorry
+  -- case hXIdent => sorry
+  -- conv =>
+  --   enter [1, 1, 1, 1]
+  --   rw [moment_def, moment_def, Pi.pow_apply, <- pow_mul, <- pow_mul]
+  --   simp only [Nat.reduceMul]
+  --   rw [<- moment, <- moment, <- hXi]
+  -- conv =>
+  --   enter [1, 1, 2, 2, ω]
+  --   rw [mul_assoc, div_pow, div_mul_div_comm, <- pow_succ']
+  --   simp only [Nat.reduceAdd]
+  -- rw [integral_const_mul, integral_div]
+  -- conv =>
+  --   enter [1, 2, 2, ω]
+  --   rw [<- pow_mul, div_pow]
+  --   simp only [Nat.reduceMul]
+  --   calc
+  --     (∑ x, X x ω) ^ 4 / (↑n + 1) ^ 4
+  --       = (∑ x, X x) ω ^ 4 / (↑n + 1) ^ 4
+  --     := by simp?
+  --     _ = (((∑ x, X x) ^ 4) ω) / (↑n + 1) ^ 4
+  --     := by simp?
+  -- rw [integral_div, <- moment, _4_moment_sum ?hX ?hXIndep ?hXIdent]
+  -- case hX => sorry
+  -- case hXIndep => sorry
+  -- case hXIdent => sorry
+  -- rw [<- hXi, one_mul]
+  -- simp_rw [add_div]
+  -- conv =>
+  --   enter [1, 1, 1, 1]
+  --   rw [mul_comm, <- mul_div, sq, div_mul_eq_div_div, div_self h1, mul_div, mul_one]
+  -- conv =>
+  --   enter [1, 1, 1, 2]
+  --   rw [mul_assoc, mul_comm, <- mul_div, sq (_ + 1), div_mul_eq_div_div, div_self h1,
+  --     mul_div, mul_one]
+  -- simp_rw [add_assoc]
+  -- rw [add_comm, add_sub, add_comm]
+  -- simp_rw [add_assoc, <- add_assoc]
+  -- conv =>
+  --   enter [1, 1, 1, 1, 1, 1]
+  --   rw [add_comm, <- add_assoc]
+  -- conv =>
+  --   enter [1, 1, 1, 1, 1, 1, 1]
+  --   calc
+  --     (↑n + 1) * moment Xi 4 P / (↑n + 1) ^ 4 + moment Xi 4 P / (↑n + 1)
+  --       = moment Xi 4 P / (↑n + 1) ^ 3 + moment Xi 4 P / (↑n + 1)
+  --     := by
+  --       rw [add_left_inj, mul_comm, <- mul_div]
+  --       nth_rw 2 [div_eq_mul_one_div]
+  --       rw [mul_eq_mul_left_iff]
+  --       left
+  --       rw [pow_succ', div_mul_eq_div_div, div_self h1]
+  --     _ = moment Xi 4 P * (1 / (↑n + 1) ^ 3 + 1 / (↑n + 1))
+  --     := by
+  --       rw [<- mul_one (moment Xi 4 P), <- mul_div, <- mul_div, <- mul_add, mul_one]
+  --     _ = (((↑n + 1) ^ 2 + 1) / (↑n + 1) ^ 3) * moment Xi 4 P
+  --     := by
+  --       rw [mul_comm, mul_eq_mul_right_iff]
+  --       left
+  --       nth_rw 1 [pow_succ']
+  --       rw [div_mul_eq_div_div, div_eq_mul_one_div]
+  --       nth_rw 2 [<- mul_one (@HDiv.hDiv ℝ ℝ ℝ instHDiv 1 (↑n + 1) : ℝ)]
+  --       rw [<- mul_add]
+  --       nth_rw 3 [pow_succ]
+  --       rw [div_mul_eq_div_div]
+  --       nth_rw 3 [div_eq_mul_one_div]
+  --       rw [mul_comm, mul_eq_mul_right_iff]
+  --       left
+  --       rw [add_div, <- div_pow, div_self h1, one_pow, add_comm]
+  -- rw [add_assoc, add_assoc, add_assoc, add_assoc, <- add_sub]
+  -- nth_rw 1 [add_div]
+  -- rw [add_right_inj]
+
+  -- rw [<- add_assoc, <- add_assoc, <- add_assoc]
+  -- conv =>
+  --   enter [1, 1, 1, 1, 1]
+  --   calc
+  --     ↑n * moment Xi 2 P ^ 2 / (↑n + 1)
+  --       + 3 * (↑n + 1) * ↑n * moment Xi 2 P ^ 2 / (↑n + 1) ^ 4
+  --       = ↑n * moment Xi 2 P ^ 2 * (1 / (↑n + 1) + 3 * (↑n + 1) / (↑n + 1) ^ 4)
+  --     := by
+  --       rw [mul_assoc]
+  --       nth_rw 2 [mul_comm]
+  --       nth_rw 1 [div_eq_mul_one_div]
+  --       rw [<- mul_div, <- mul_add, mul_eq_mul_left_iff]
+  --       left
+  --       simp only [one_div]
+  --     _ = ↑n / (↑n + 1) * moment Xi 2 P ^ 2 * (1 + 3 * (↑n + 1) / (↑n + 1) ^ 3)
+  --     := by
+  --       nth_rw 5 [mul_comm]
+  --       nth_rw 1 [mul_div]
+  --       nth_rw 5 [mul_comm]
+  --       nth_rw 4 [mul_comm]
+  --       nth_rw 1 [mul_div]
+  --       nth_rw 4 [mul_comm]
+  --       nth_rw 2 [<- mul_div]
+  --       rw [mul_eq_mul_left_iff]
+  --       left
+  --       rw [add_div, add_right_inj, <- mul_div, <- mul_div, <- mul_div, mul_eq_mul_left_iff]
+  --       left
+  --       rw [div_div, pow_succ]
+  --     _ = ↑n / (↑n + 1) * moment Xi 2 P ^ 2 * (1 + 3 / (↑n + 1) ^ 2)
+  --     := by
+  --       rw [mul_eq_mul_left_iff]
+  --       left
+  --       rw [add_right_inj]
+  --       nth_rw 2 [div_eq_mul_one_div]
+  --       rw [<- mul_div, mul_eq_mul_left_iff]
+  --       left
+  --       rw [pow_succ', div_mul_eq_div_div, div_self h1]
+  --     _ = ↑n / (↑n + 1) * (1 + 3 / (↑n + 1) ^ 2) * moment Xi 2 P ^ 2
+  --     := by linarith only []
+  -- rw [add_assoc, add_assoc, <- add_sub]
+  -- rw [add_eq_left]
   sorry
 
 theorem mse_scaled_svar_var
