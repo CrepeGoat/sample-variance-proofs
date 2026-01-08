@@ -237,7 +237,6 @@ private theorem moment_1_biased_svar
       enter [1, ω]
       rw [<- Pi.mul_apply]
     -- https://leanprover.zulipchat.com/#narrow/channel/113489-new-members/topic/ISO.20help.20with.20theorem.20using.20MemLp.20and.20IdentDistrib/near/566627078
-    #check MemLp.integrable_mul (hX i) (hX j)
     apply MemLp.integrable_mul (hX i) (hX j)
   rw [moment_2_smean hX hXIndep hXIdent, moment_1_smean_sq hX hXIndep hXIdent]
   rw [mul_sub, <- sub_sub, sub_left_inj]
@@ -394,7 +393,7 @@ private theorem moment_2_biased_svar
       rw [memLp_two_iff_integrable_sq ?h1]
       case h1 =>
         have hXProd : X j1 * X j2 = ∏ j ∈ {j1, j2}, X j := by
-          rw [<- one_mul (a := X j1), <- prod_eq_one (s := {}) (f := X)]
+          rw [<- one_mul (a := X j1), <- prod_eq_one (s := {}) (f := X) (by simp?)]
           -- conv in (∅) => rw [erase_eq_empty_iff]
           sorry
         rw [hXProd]
@@ -627,14 +626,20 @@ theorem mse_scaled_svar_var
     simp only [ne_eq, Nat.add_eq_zero, one_ne_zero, and_false, not_false_eq_true]
 
   simp only [Pi.pow_apply]
-  rw [integral_const_mul, integral_sub, integral_div]
+  rw [integral_const_mul, integral_sub ?hf ?hg, integral_div]
+  case hf => sorry
+  case hg => sorry
   -- rw [integral_const_mul, integral_mul_const, integral_div, integral_add, integral_sub]
   conv =>
     enter [1, 1, 1, 2, ω]
     rw [mul_pow, div_pow, sub_sq, div_pow, div_pow, <- pow_mul, <- pow_mul]
     simp only [Nat.reduceMul]
-  rw [integral_const_mul, integral_add, integral_sub, integral_div, integral_div, mul_add, mul_sub]
-
+  rw [integral_const_mul, integral_add ?hf1 ?hg1, integral_sub ?hf2 ?hg2, integral_div,
+    integral_div, mul_add, mul_sub]
+  case hf1 => sorry
+  case hg1 => sorry
+  case hf2 => sorry
+  case hg2 => sorry
   -- conv =>
   --   enter [1, 1, 1, 2, ω]
   --   rw [mul_div, mul_comm, <- mul_div, mul_comm, mul_pow]
