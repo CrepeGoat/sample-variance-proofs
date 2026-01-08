@@ -237,6 +237,7 @@ private theorem moment_1_biased_svar
       enter [1, ω]
       rw [<- Pi.mul_apply]
     -- https://leanprover.zulipchat.com/#narrow/channel/113489-new-members/topic/ISO.20help.20with.20theorem.20using.20MemLp.20and.20IdentDistrib/near/566627078
+    #check MemLp.integrable_mul (hX i) (hX j)
     apply MemLp.integrable_mul (hX i) (hX j)
   rw [moment_2_smean hX hXIndep hXIdent, moment_1_smean_sq hX hXIndep hXIdent]
   rw [mul_sub, <- sub_sub, sub_left_inj]
@@ -370,7 +371,41 @@ private theorem moment_2_biased_svar
       case h3 => simp only [ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true]
     apply MemLp.integrable_mul (p := 2) (q := 2) (hXSqMemLp2 i) (hXSqMemLp2 j)
   have hIntegPow4Smean : Integrable (fun a ↦ (smean fun i ↦ X i a) ^ 4) P := by
-    sorry
+    unfold smean
+    conv in (_ ^ 4) => rw [div_pow]
+    apply Integrable.div_const
+    conv in (_ ^ 4) => rw [pow_succ', sum_mul]
+    apply integrable_finset_sum; intro i1 hi1
+    conv in (_ * _ ^ 3) => rw [pow_succ', sum_mul, mul_sum]
+    conv => enter [1, a, 2, i]; rw [<- mul_assoc]
+    apply integrable_finset_sum; intro i2 hi2
+    conv in (_ * (_ ^ 2)) => rw [sq, sum_mul, mul_sum]
+    apply integrable_finset_sum; intro i3 hi3
+    conv in (_ * (_ * _)) => rw [<- mul_assoc, mul_sum]
+    apply integrable_finset_sum; intro i4 hi4
+    conv in (_ * _ * _ * _) => rw [mul_assoc (b := (X i3 a))]
+
+    have hXMemLpSq : ∀ j : Fin (n + 1), MemLp (X j ^ 2) 2 P := by
+      -- conv in (_ ^ 2) => rw [<- sq_abs]
+      -- apply MemLp.norm_rpow_div (p := 2) (q := 2)
+      sorry
+    have hXMemLpMul : ∀ (j1 j2 : Fin (n + 1)), MemLp (X j1 * X j2) 2 P := by
+      intro j1 j2
+      rw [memLp_two_iff_integrable_sq ?h1]
+      case h1 =>
+        have hXProd : X j1 * X j2 = ∏ j ∈ {j1, j2}, X j := by
+          rw [<- one_mul (a := X j1), <- prod_eq_one (s := {}) (f := X)]
+          -- conv in (∅) => rw [erase_eq_empty_iff]
+          sorry
+        rw [hXProd]
+        apply aestronglyMeasurable_prod {j1, j2}; intro j hj
+        rw [<- memLp_zero_iff_aestronglyMeasurable]
+        apply MemLp.mono_exponent (hX j)
+        simp only [zero_le]
+      conv => enter [1, x, 1]; rw [Pi.mul_apply]
+      conv in (_ ^ 2) => rw [mul_pow]
+      apply MemLp.integrable_mul (hXMemLpSq j1) (hXMemLpSq j2)
+    apply MemLp.integrable_mul (hXMemLpMul i1 i2) (hXMemLpMul i3 i4)
   rw [
     integral_sub ?hf2 ?hg2,
     integral_add hIntegSqSmeanSq hIntegPow4Smean,
