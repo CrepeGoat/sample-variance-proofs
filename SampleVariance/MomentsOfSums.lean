@@ -10,6 +10,7 @@ import Mathlib.MeasureTheory.Function.L1Space.Integrable
 import Mathlib.Data.Finset.Range
 
 import SampleVariance.PowOfSums
+import SampleVariance.SumMomentLemmas
 
 -- https://leanprover-community.github.io/blog/posts/basic-probability-in-mathlib/
 open Finset MeasureTheory ProbabilityTheory NNReal
@@ -27,20 +28,6 @@ noncomputable def isum_rv
   (X : (Fin n) → Ω → R)
   -- (hX : (i : Fin n) → Measurable (X i))
   : (Ω → R) := fun (ω : Ω) => (∑ i : Fin n, X i ω)
-
-private theorem MemLp.integrable_pow
-  {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsFiniteMeasure P]
-  {f : Ω → ℝ}
-  {k : ℕ}
-  (h : MemLp f k P)
-  : Integrable (fun x => f x ^ k) P
-  := by
-  obtain rfl | hk := eq_or_ne k 0
-  · simp only [pow_zero, enorm_one, ne_eq, ENNReal.one_ne_top, not_false_eq_true,
-    integrable_const_enorm]
-  rw [← integrable_norm_iff]
-  · simpa [← memLp_one_iff_integrable] using h.norm_rpow (by norm_cast) (by simp)
-  exact h.aestronglyMeasurable.pow k
 
 -- https://leanprover.zulipchat.com/#narrow/channel/113489-new-members/topic/stuck.20on.20a.20proof.20on.20probability.20expectations/near/564137993
 private theorem k_moment_sum_recursive
@@ -100,38 +87,6 @@ private theorem k_moment_sum_recursive
     · apply MemLp.integrable_pow
       apply (hX _).mono_exponent
       simp_all only [mem_range, ENNReal.natCast_sub, tsub_le_iff_right, self_le_add_right]
-
--- https://leanprover.zulipchat.com/#narrow/channel/113489-new-members/topic/stuck.20on.20proof.20for.20iIndepFun.20on.20subset.20of.20indices/near/564583898
-private lemma iIndepFun_succ
-  {Ω : Type u_1} [MeasurableSpace Ω]
-  {P : Measure Ω}
-  {n : ℕ}
-  {X : Fin (n + 1) → Ω → ℝ}
-  (hXIndep : iIndepFun X P)
-  : iIndepFun (fun i : Fin n => X i.castSucc) P
-  := by
-  exact iIndepFun.precomp (f := X) (Fin.castSucc_injective n) hXIndep
-
-private lemma moment_eq_if_identdistrib
-  {Ω : Type u_1} [m : MeasurableSpace Ω]
-  {P : Measure Ω} [IsFiniteMeasure P]
-  {n k : ℕ}
-  {i j : Fin n}
-  {X : Fin (n) → Ω → ℝ}
-  (hXIdent : IdentDistrib (X i) (X j) P P)
-  : moment (X i) k P = moment (X j) k P
-  := by
-  have h := IdentDistrib.comp hXIdent (Measurable.pow_const measurable_id k)
-  apply h.integral_eq
-
-private theorem zero_moment_eq_one
-  {Ω : Type u_1} [m : MeasurableSpace Ω]
-  {P : Measure Ω} [mP : IsProbabilityMeasure P]
-  (X : Ω → ℝ)
-  : moment X 0 P = 1
-  := by
-  unfold moment
-  simp only [pow_zero, Pi.one_apply, integral_const, measureReal_univ_eq_one, smul_eq_mul, mul_one]
 
 set_option linter.unusedVariables false in
 theorem _0_moment_sum
