@@ -342,8 +342,7 @@ private theorem moment_2_biased_svar
     rw [Pi.pow_apply, sub_sq', <- pow_mul]
     rw [mul_assoc]
     simp only [Nat.reduceMul]
-  rw [integral_sub ?hf2 ?hg2, integral_add ?hf1 ?hg1, integral_const_mul]
-  case hf1 =>
+  have hIntegSqSmeanSq : Integrable (fun a ↦ (smean fun i ↦ X i a ^ 2) ^ 2) P := by
     unfold smean
     conv in (_ ^ 2) => rw [div_pow]
     apply Integrable.div_const
@@ -370,9 +369,14 @@ private theorem moment_2_biased_svar
         exact hX k
       case h3 => simp only [ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true]
     apply MemLp.integrable_mul (p := 2) (q := 2) (hXSqMemLp2 i) (hXSqMemLp2 j)
-  case hg1 =>
+  have hIntegPow4Smean : Integrable (fun a ↦ (smean fun i ↦ X i a) ^ 4) P := by
     sorry
-  case hf2 => sorry
+  rw [
+    integral_sub ?hf2 ?hg2,
+    integral_add hIntegSqSmeanSq hIntegPow4Smean,
+    integral_const_mul
+  ]
+  case hf2 => exact Integrable.add hIntegSqSmeanSq hIntegPow4Smean
   case hg2 => sorry
 
   rw [
