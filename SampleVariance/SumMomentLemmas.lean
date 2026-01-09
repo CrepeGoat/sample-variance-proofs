@@ -58,3 +58,16 @@ theorem zero_moment_eq_one
   := by
   unfold moment
   simp only [pow_zero, Pi.one_apply, integral_const, measureReal_univ_eq_one, smul_eq_mul, mul_one]
+
+theorem Finset.aestronglyMeasurable_mul.{u_1, u_5}
+  {α : Type u_1} [m₀ : MeasurableSpace α]
+  {μ : Measure α}
+  {M : Type u_5} [CommMonoid M] [TopologicalSpace M] [ContinuousMul M]
+  {f g : α → M}
+  (hf : AEStronglyMeasurable f μ)
+  (hg : AEStronglyMeasurable g μ)
+  : AEStronglyMeasurable (f * g) μ
+  := by
+    -- rw [<- one_mul (a := X j1), <- prod_eq_one (s := {}) (f := X) (by simp?)]
+    -- conv in (∅) => rw [erase_eq_empty_iff]
+  sorry

@@ -9,6 +9,7 @@ import Mathlib.MeasureTheory.Function.L1Space.Integrable
 import Mathlib.Data.Finset.Range
 
 import SampleVariance.MomentsOfSums
+import SampleVariance.SumMomentLemmas
 import SampleVariance.SampleStatisticsDefs
 
 open Finset MeasureTheory ProbabilityTheory NNReal
@@ -392,15 +393,12 @@ private theorem moment_2_biased_svar
       intro j1 j2
       rw [memLp_two_iff_integrable_sq ?h1]
       case h1 =>
-        have hXProd : X j1 * X j2 = ∏ j ∈ {j1, j2}, X j := by
-          rw [<- one_mul (a := X j1), <- prod_eq_one (s := {}) (f := X) (by simp?)]
-          -- conv in (∅) => rw [erase_eq_empty_iff]
-          sorry
-        rw [hXProd]
-        apply aestronglyMeasurable_prod {j1, j2}; intro j hj
-        rw [<- memLp_zero_iff_aestronglyMeasurable]
-        apply MemLp.mono_exponent (hX j)
-        simp only [zero_le]
+        have hXAEM : ∀ k, AEStronglyMeasurable (X k) P := by
+          intro k
+          rw [<- memLp_zero_iff_aestronglyMeasurable]
+          apply MemLp.mono_exponent (hX k)
+          simp only [zero_le]
+        apply aestronglyMeasurable_mul (hXAEM j1) (hXAEM j2)
       conv => enter [1, x, 1]; rw [Pi.mul_apply]
       conv in (_ ^ 2) => rw [mul_pow]
       apply MemLp.integrable_mul (hXMemLpSq j1) (hXMemLpSq j2)
