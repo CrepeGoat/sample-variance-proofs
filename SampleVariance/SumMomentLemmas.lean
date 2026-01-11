@@ -71,3 +71,37 @@ theorem Finset.aestronglyMeasurable_mul.{u_1, u_5}
     -- rw [<- one_mul (a := X j1), <- prod_eq_one (s := {}) (f := X) (by simp?)]
     -- conv in (∅) => rw [erase_eq_empty_iff]
   sorry
+
+theorem memLp_pow
+  (Ω : Type u_1) [MeasurableSpace Ω]
+  (n m : ℕ)
+  (f : Ω → ℝ)
+  (P : Measure Ω) [IsProbabilityMeasure P]
+  (hFMemLp : MemLp f ((2 * m) * n) P)
+  : MemLp (f ^ (2 * m)) n P
+  := by
+  have hFFun : f ^ (2 * m) = fun ω => f ω ^ (2 * m) := by rfl
+  conv in (f ^ (2 * m)) => rw [hFFun]
+  conv in (_ ^ (2 * m)) => rw [pow_mul, <- sq_abs, <- Real.norm_eq_abs, <- pow_mul]
+  have h1 :=  MemLp.norm_rpow_div (f := f) (q := (2 * m)) (hFMemLp)
+  have h2 : ∀ x : ℝ, x ^ (@OfNat.ofNat ℝ 2 instOfNatAtLeastTwo * ↑m) = x ^ (2 * m) := by
+    sorry
+  conv at h1 in (_ ^ (2 * _).toReal) =>
+    rw [ENNReal.toReal_mul, ENNReal.toReal_ofNat, ENNReal.toReal_natCast, h2]
+  conv at h1 in (_ / _) => rw [mul_comm, <- mul_div]
+  -- conv at h1 in (_ / _) => rw [mul_div_mul_comm]
+  sorry
+  -- rw [ENNReal.toReal_ofNat] at h1
+  -- conv at h1 in (4 / 2) => rw []
+  -- simp_all? -- only [Real.rpow_ofNat]
+      -- have hXFun : X i ^ 2 = fun ω => X i ω ^ 2 := by rfl
+      -- conv in (X i ^ 2) => rw [hXFun]
+      -- conv in (_ ^ 2) => rw [<- sq_abs, <- Real.norm_eq_abs]
+      -- have hMemLp2 : MemLp (X i) 2 P := by
+      --   apply MemLp.mono_exponent (hX i)
+      --   rw [Nat.ofNat_le, @Nat.add_one_le_add_one_iff, @Nat.add_one_le_add_one_iff]
+      --   apply zero_le
+      -- have h1 :=  MemLp.norm_rpow_div (f := X i) (p := 4) (q := 2) (hX i)
+      -- rw [ENNReal.toReal_ofNat] at h1
+      -- conv at h1 in (4 / 2) => rw []
+      -- simp_all? -- only [Real.rpow_ofNat]

@@ -386,9 +386,16 @@ private theorem moment_2_biased_svar
     conv in (_ * _ * _ * _) => rw [mul_assoc (b := (X i3 a))]
 
     have hXMemLpSq : ∀ j : Fin (n + 1), MemLp (X j ^ 2) 2 P := by
-      -- conv in (_ ^ 2) => rw [<- sq_abs]
-      -- apply MemLp.norm_rpow_div (p := 2) (q := 2)
-      sorry
+      intro i
+      conv in (_ ^ 2) => rw [<- mul_one (a := 2)]
+      apply memLp_pow
+      simp only [Nat.cast_one, mul_one, Nat.cast_ofNat]
+      conv in (_ * _) => simp [Nat.reduceMul]
+      have h2: @HMul.hMul ℝ≥0∞ ℝ≥0∞ ℝ≥0∞ instHMul 2 2 = @OfNat.ofNat ℝ≥0∞ 4 instOfNatAtLeastTwo
+        := by
+        sorry
+      rw [h2]
+      apply (hX i)
     have hXMemLpMul : ∀ (j1 j2 : Fin (n + 1)), MemLp (X j1 * X j2) 2 P := by
       intro j1 j2
       rw [memLp_two_iff_integrable_sq ?h1]
