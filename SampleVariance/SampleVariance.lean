@@ -11,91 +11,11 @@ import Mathlib.Data.Finset.Range
 import SampleVariance.MomentsOfSums
 import SampleVariance.SumMomentLemmas
 import SampleVariance.SampleStatisticsDefs
+import SampleVariance.EstimatorDefs
 
 open Finset MeasureTheory ProbabilityTheory NNReal
 open scoped ENNReal
 
-
-noncomputable def bias
-  {Ω : Type u_2} [MeasurableSpace Ω]
-  (X : Ω → ℝ)
-  (θ : ℝ)
-  (P : Measure Ω) [IsFiniteMeasure P]
-  : ℝ := P[fun ω : Ω => X ω - θ]
-
-theorem bias_eq_sub
-  {Ω : Type u_2} [MeasurableSpace Ω]
-  {X : Ω → ℝ}
-  {θ : ℝ}
-  {P : Measure Ω} [IsProbabilityMeasure P]
-  (hXIntegrable : Integrable X P)
-  : bias X θ P = P[X] - θ
-  := by
-  unfold bias
-  simp only
-  rw [integral_sub hXIntegrable (by simp), integral_const, smul_eq_mul, sub_right_inj,
-    measureReal_univ_eq_one, one_mul]
-
--- theorem bias_svar_var
---   {Ω : Type u_1} [m : MeasurableSpace Ω]
---   {P : Measure Ω} [IsProbabilityMeasure P]
---   {n k : ℕ}
---   (X : Fin (n + 1) → Ω → ℝ)
---   : bias (fun ω => biased_svar (fun i => X i ω)) (variance (X (Fin.last n)) P) P
---     = (-1 / (n + 1)) * (variance (X (Fin.last n)) P)
---   := by
---   have h : @Nat.cast ℝ Real.instNatCast (n + 1) ≠ 0 := by
---     rw [Nat.cast_ne_zero, ne_eq, Nat.add_eq_zero]
---     simp only [one_ne_zero, and_false, not_false_eq_true]
-
---   rw [bias_eq_sub ?hSvarIntegrable]
---   case hSvarIntegrable =>
---     sorry
---   conv =>
---     lhs
---     congr
---     · congr
---       · skip
---       · ext ω
---         rw [biased_svar_eq_sub]
---     · skip
-
---   rw [sub_eq_iff_eq_add', neg_div, neg_mul, <- sub_eq_add_neg]
---   nth_rw 1 [<- one_mul (@variance Ω m (X (Fin.last n)) P)]
---   rw [<- sub_mul, sub_div' (by simp_all only [Nat.cast_add, Nat.cast_one, ne_eq, not_false_eq_true]), one_mul, add_sub_cancel_right]
-
-
---   unfold smean
---   simp only
---   rw [integral_sub, integral_div]
---   rw [moment_def]
---   sorry
-
-noncomputable def mse
-  {Ω : Type u_2} [MeasurableSpace Ω]
-  (X : Ω → ℝ)
-  (θ : ℝ)
-  (P : Measure Ω) [IsFiniteMeasure P]
-  : ℝ := variance X P + (bias X θ P) ^ 2
-
--- ProbabilityTheory.variance_eq_sub
-
-theorem mse_eq
-  {Ω : Type u_1} [m : MeasurableSpace Ω]
-  {X : Ω → ℝ}
-  {P : Measure Ω} [IsProbabilityMeasure P]
-  (hXm2 : MemLp X 2 P)
-  (θ : ℝ)
-  : mse X θ P = P[X ^ 2] - 2 * P[X] * θ + θ ^ 2
-  := by
-  unfold mse
-  have hXIntegrable : Integrable X P := by
-    rw [<- memLp_one_iff_integrable]
-    apply MemLp.mono_exponent hXm2
-    exact one_le_two
-  rw [bias_eq_sub hXIntegrable, sub_sq, sub_add, add_sub, sub_add, sub_left_inj]
-  rw [<- sub_eq_iff_eq_add.mp]
-  rw [variance_eq_sub hXm2]
 
 private theorem moment_1_smean
   {Ω : Type u_1} [m : MeasurableSpace Ω]
