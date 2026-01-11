@@ -110,33 +110,24 @@ theorem memLp_pow
   (f : Ω → ℝ)
   (P : Measure Ω) [IsProbabilityMeasure P]
   (hFMemLp : MemLp f ((2 * m) * n) P)
+  (hm : m ≠ 0)
   : MemLp (f ^ (2 * m)) n P
   := by
   have hFFun : f ^ (2 * m) = fun ω => f ω ^ (2 * m) := by rfl
   conv in (f ^ (2 * m)) => rw [hFFun]
   conv in (_ ^ (2 * m)) => rw [pow_mul, <- sq_abs, <- Real.norm_eq_abs, <- pow_mul]
-  have h1 :=  MemLp.norm_rpow_div (f := f) (q := (2 * m)) (hFMemLp)
-  have h2 : ∀ x : ℝ, x ^ (@OfNat.ofNat ℝ 2 instOfNatAtLeastTwo * ↑m) = x ^ (2 * m) := by
-    sorry
-  conv at h1 in (_ ^ (2 * _).toReal) =>
-    rw [ENNReal.toReal_mul, ENNReal.toReal_ofNat, ENNReal.toReal_natCast, h2]
-  conv at h1 in (_ / _) => rw [mul_comm, <- mul_div]
-  -- conv at h1 in (_ / _) => rw [mul_div_mul_comm]
-  sorry
-  -- rw [ENNReal.toReal_ofNat] at h1
-  -- conv at h1 in (4 / 2) => rw []
-  -- simp_all? -- only [Real.rpow_ofNat]
-      -- have hXFun : X i ^ 2 = fun ω => X i ω ^ 2 := by rfl
-      -- conv in (X i ^ 2) => rw [hXFun]
-      -- conv in (_ ^ 2) => rw [<- sq_abs, <- Real.norm_eq_abs]
-      -- have hMemLp2 : MemLp (X i) 2 P := by
-      --   apply MemLp.mono_exponent (hX i)
-      --   rw [Nat.ofNat_le, @Nat.add_one_le_add_one_iff, @Nat.add_one_le_add_one_iff]
-      --   apply zero_le
-      -- have h1 :=  MemLp.norm_rpow_div (f := X i) (p := 4) (q := 2) (hX i)
-      -- rw [ENNReal.toReal_ofNat] at h1
-      -- conv at h1 in (4 / 2) => rw []
-      -- simp_all? -- only [Real.rpow_ofNat]
+  -- https://leanprover.zulipchat.com/#narrow/channel/113489-new-members/topic/converting.20between.20reals.2C.20ENNReals.20and.20Nats/near/567358350
+  convert MemLp.norm_rpow_div (f := f) (q := (2 * m)) (hFMemLp)
+  · rw [← Real.rpow_natCast]
+    congr
+    norm_num
+  · norm_cast
+    rw [ENNReal.eq_div_iff]
+    · norm_num
+    · norm_num
+      rw [<- ne_eq]
+      exact hm
+    · exact ENNReal.natCast_ne_top (2 * m)
 
 theorem integrable_pow4_sum
   {Ω : Type u_1} [m : MeasurableSpace Ω]
@@ -161,12 +152,10 @@ theorem integrable_pow4_sum
     intro i
     conv in (_ ^ 2) => rw [<- mul_one (a := 2)]
     apply memLp_pow
+    case hm => exact Nat.one_ne_zero
     simp only [Nat.cast_one, mul_one, Nat.cast_ofNat]
     conv in (_ * _) => simp [Nat.reduceMul]
-    have h2: @HMul.hMul ℝ≥0∞ ℝ≥0∞ ℝ≥0∞ instHMul 2 2 = @OfNat.ofNat ℝ≥0∞ 4 instOfNatAtLeastTwo
-      := by
-      sorry
-    rw [h2]
+    norm_num
     apply (hX i)
   have hXMemLpMul : ∀ (j1 j2 : Fin (n + 1)), MemLp (X j1 * X j2) 2 P := by
     intro j1 j2
