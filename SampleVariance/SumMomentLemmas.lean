@@ -137,3 +137,48 @@ theorem memLp_pow
       -- rw [ENNReal.toReal_ofNat] at h1
       -- conv at h1 in (4 / 2) => rw []
       -- simp_all? -- only [Real.rpow_ofNat]
+
+theorem integrable_pow4_sum
+  {Ω : Type u_1} [m : MeasurableSpace Ω]
+  {n : ℕ}
+  {X : Fin (n + 1) → Ω → ℝ}
+  {P : Measure Ω} [inst : IsProbabilityMeasure P]
+  (hX : ∀ (i : Fin (n + 1)), MemLp (X i) 4 P)
+  : Integrable (fun x ↦ (∑ i, (fun i ↦ X i x) i) ^ 4) P
+  := by
+  conv in (_ ^ 4) => rw [pow_succ', sum_mul]
+  apply integrable_finset_sum; intro i1 hi1
+  conv in (_ * _ ^ 3) => rw [pow_succ', sum_mul, mul_sum]
+  conv => enter [1, a, 2, i]; rw [<- mul_assoc]
+  apply integrable_finset_sum; intro i2 hi2
+  conv in (_ * (_ ^ 2)) => rw [sq, sum_mul, mul_sum]
+  apply integrable_finset_sum; intro i3 hi3
+  conv in (_ * (_ * _)) => rw [<- mul_assoc, mul_sum]
+  apply integrable_finset_sum; intro i4 hi4
+  conv in (_ * _ * _ * _) => rw [mul_assoc (b := (X i3 a))]
+
+  have hXMemLpSq : ∀ j : Fin (n + 1), MemLp (X j ^ 2) 2 P := by
+    intro i
+    conv in (_ ^ 2) => rw [<- mul_one (a := 2)]
+    apply memLp_pow
+    simp only [Nat.cast_one, mul_one, Nat.cast_ofNat]
+    conv in (_ * _) => simp [Nat.reduceMul]
+    have h2: @HMul.hMul ℝ≥0∞ ℝ≥0∞ ℝ≥0∞ instHMul 2 2 = @OfNat.ofNat ℝ≥0∞ 4 instOfNatAtLeastTwo
+      := by
+      sorry
+    rw [h2]
+    apply (hX i)
+  have hXMemLpMul : ∀ (j1 j2 : Fin (n + 1)), MemLp (X j1 * X j2) 2 P := by
+    intro j1 j2
+    rw [memLp_two_iff_integrable_sq ?h1]
+    case h1 =>
+      have hXAEM : ∀ k, AEStronglyMeasurable (X k) P := by
+        intro k
+        rw [<- memLp_zero_iff_aestronglyMeasurable]
+        apply MemLp.mono_exponent (hX k)
+        simp only [zero_le]
+      apply aestronglyMeasurable_mul (hXAEM j1) (hXAEM j2)
+    conv => enter [1, x, 1]; rw [Pi.mul_apply]
+    conv in (_ ^ 2) => rw [mul_pow]
+    apply MemLp.integrable_mul (hXMemLpSq j1) (hXMemLpSq j2)
+  apply MemLp.integrable_mul (hXMemLpMul i1 i2) (hXMemLpMul i3 i4)
