@@ -360,7 +360,19 @@ private theorem moment_2_biased_svar
     integral_const_mul
   ]
   case hf2 => exact Integrable.add hIntegSqSmeanSq hIntegPow4Smean
-  case hg2 => sorry
+  case hg2 =>
+    apply Integrable.const_mul
+    unfold smean
+    conv in (_ * _) => rw [div_pow, div_mul_div_comm]
+    apply Integrable.div_const
+    conv =>
+      enter [1, x, 2, 1, 2, i]
+      rfl
+    conv =>
+      enter [1, x, 1, 2, i]
+      rfl
+    convert integrable_sum_sq_mul_sq_sum hX
+    simp only [Pi.mul_apply, sum_apply, Pi.pow_apply]
 
   rw [
     moment_2_smean_sq hX hXIndep hXIdent,

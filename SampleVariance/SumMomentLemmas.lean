@@ -60,10 +60,10 @@ theorem zero_moment_eq_one
   simp only [pow_zero, Pi.one_apply, integral_const, measureReal_univ_eq_one, smul_eq_mul, mul_one]
 
 theorem integrable_sq_sum_sq
-  (Ω : Type u_1) [MeasurableSpace Ω]
-  (n : ℕ)
-  (X : Fin (n + 1) → Ω → ℝ)
-  (P : Measure Ω) [IsProbabilityMeasure P]
+  {Ω : Type u_1} [MeasurableSpace Ω]
+  {n : ℕ}
+  {X : Fin (n + 1) → Ω → ℝ}
+  {P : Measure Ω} [IsProbabilityMeasure P]
   (hX : ∀ (i : Fin (n + 1)), MemLp (X i) 4 P)
   : Integrable (fun x ↦ (∑ i, (fun i ↦ X i x ^ 2) i) ^ 2) P
   := by
@@ -90,6 +90,16 @@ theorem integrable_sq_sum_sq
       exact hX k
     case h3 => simp only [ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true]
   apply MemLp.integrable_mul (p := 2) (q := 2) (hXSqMemLp2 i) (hXSqMemLp2 j)
+
+theorem integrable_sum_sq_mul_sq_sum
+  {Ω : Type u_1} [MeasurableSpace Ω]
+  {n : ℕ}
+  {X : Fin (n + 1) → Ω → ℝ}
+  {P : Measure Ω} [IsProbabilityMeasure P]
+  (hX : ∀ (i : Fin (n + 1)), MemLp (X i) 4 P)
+  : Integrable ((∑ i, X i ^ 2) * (∑ i, X i) ^ 2) P
+  := by
+  sorry
 
 theorem aestronglyMeasurable_mul
   {α : Type u_1} [m₀ : MeasurableSpace α]
