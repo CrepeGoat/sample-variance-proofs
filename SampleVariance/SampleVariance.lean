@@ -347,29 +347,8 @@ private theorem moment_2_biased_svar
     unfold smean
     conv in (_ ^ 2) => rw [div_pow]
     apply Integrable.div_const
-    conv in (_ ^ 2) => rw [sum_sq_eq_sum_sum_mul]
-    apply integrable_finset_sum; intro i hi
-    apply integrable_finset_sum; intro j hj
-    have hXSqMemLp2 : ∀ k, MemLp (fun a ↦ X k a ^ 2) 2 P := by
-      intro k
-      conv in (X _ _ ^ 2) => rw [<- sq_abs, <- Real.norm_eq_abs]
-      rw [memLp_two_iff_integrable_sq ?h1]
-      case h1 =>
-        rw [<- memLp_zero_iff_aestronglyMeasurable]
-        have hXMemLp0 : MemLp (X k) 0 P := by
-          apply MemLp.mono_exponent (hX k)
-          simp only [zero_le]
-        have hXMemLpNormSq := MemLp.norm_rpow_div (hXMemLp0) (q := 2)
-        rw [ENNReal.zero_div, ENNReal.toReal_ofNat] at hXMemLpNormSq
-        simp_all only [Real.rpow_ofNat]
-      conv in ((_ ^ 2) ^ 2) => rw [<- pow_mul]
-      simp only [Nat.reduceMul]
-      apply MemLp.integrable_norm_pow ?h1 ?h3
-      case h1 =>
-        simp only [Nat.cast_ofNat]
-        exact hX k
-      case h3 => simp only [ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true]
-    apply MemLp.integrable_mul (p := 2) (q := 2) (hXSqMemLp2 i) (hXSqMemLp2 j)
+    apply integrable_sq_sum_sq
+    exact hX
   have hIntegPow4Smean : Integrable (fun a ↦ (smean fun i ↦ X i a) ^ 4) P := by
     unfold smean
     conv in (_ ^ 4) => rw [div_pow]
